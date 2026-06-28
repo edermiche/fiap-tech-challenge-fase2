@@ -1,0 +1,8 @@
+pandas
+pyarrow
+python-dotenv
+basedosdados
+google-cloud-bigquery
+db-dtypes
+jupyter
+ipykernel
