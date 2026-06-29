@@ -1,97 +1,161 @@
-# FIAP Tech Challenge - Fase 2
+# Tech Challenge FIAP - Fase 2
 
-## Pipeline Híbrido para Análise da Alfabetização no Brasil
+Projeto de engenharia e análise de dados para acompanhar indicadores de alfabetização infantil no Brasil, usando dados públicos da Base dos Dados/INEP. A solução está organizada em camadas de dados, com foco inicial na ingestão e padronização da camada Bronze.
 
-Este projeto faz parte do Tech Challenge da Fase 2 e tem como objetivo construir uma pipeline de dados baseada na Arquitetura Medalhão, com camadas Bronze, Silver e Gold, para análise do Indicador Criança Alfabetizada.
+## Objetivo
 
-A metodologia adotada será o CRISP-DM, adaptada para um contexto de Engenharia e Ciência de Dados.
+Construir uma base analítica para responder perguntas sobre alfabetização no 2º ano do Ensino Fundamental, comparando resultados observados, metas oficiais e recortes por Brasil, UF, município, rede, escola e aluno.
 
-## Estratégia de desenvolvimento
+O projeto segue uma abordagem inspirada no CRISP-DM:
 
-Para reduzir riscos de custo, a primeira versão do projeto será executada localmente em Jupyter Notebook.
+- entendimento do negócio educacional;
+- extração dos dados públicos;
+- organização em camadas Bronze, Silver e Gold;
+- análise de qualidade, chaves, relacionamentos e potenciais transformações;
+- preparação de insumos para modelagem e análises futuras.
 
-Fluxo inicial:
+## Fontes de Dados
 
-1. Baixar os dados uma única vez da Base dos Dados / BigQuery.
-2. Salvar os dados brutos na camada Bronze local em formato Parquet.
-3. Gerar a camada Silver a partir da Bronze local.
-4. Executar validações de qualidade.
-5. Futuramente publicar as camadas finais na AWS S3.
+As consultas SQL em `queries/bronze/` extraem dados da Base dos Dados, principalmente do conjunto:
 
-## Estrutura do projeto
+- `basedosdados.br_inep_avaliacao_alfabetizacao`
+
+Entidades contempladas na camada Bronze:
+
+- `alunos`
+- `municipio`
+- `uf`
+- `meta_alfabetizacao_brasil`
+- `meta_alfabetizacao_uf`
+- `meta_alfabetizacao_municipio`
+
+## Estrutura do Projeto
 
 ```text
-fiap-tech-challenge-fase2/
+.
 ├── data/
-│   ├── bronze/
-│   ├── silver/
-│   └── gold/
+│   ├── bronze/              # dados brutos e arquivos processados da Bronze
+│   ├── silver/              # espaço reservado para dados tratados
+│   └── gold/                # espaço reservado para dados analíticos
 ├── docs/
+│   ├── crisp_dm.md
+│   ├── dicionario_dados_bronze.md
+│   └── insumos_modelagem_bronze.md
 ├── notebooks/
 │   ├── 01_download_bronze_bigquery.ipynb
+│   ├── 01_entendimento_dados_bronze.ipynb
 │   ├── 02_silver_transformacoes.ipynb
 │   └── 03_quality_checks.ipynb
 ├── queries/
-│   └── uf_alfabetizacao.sql
+│   └── bronze/              # consultas SQL usadas na extração
 ├── src/
-├── .env.example
-├── .gitignore
-├── requirements.txt
-└── README.md
+│   └── bronze/              # leitura, processamento e gravação da Bronze
+├── main.py                  # ponto de entrada do pipeline Bronze
+└── .env.example
 ```
 
-## Camadas
+## Pipeline Atual
 
-### Bronze
+O pipeline implementado em `src/bronze/` lê arquivos locais de cada entidade dentro de `data/bronze/<entidade>/`, consolida os dados em um único DataFrame e grava um arquivo Parquet processado.
 
-Dados brutos extraídos da Base dos Dados, preservados sem transformações relevantes.
+Formatos aceitos na entrada:
 
-### Silver
+- `.parquet`
+- `.csv`
+- `.xlsx`
 
-Dados tratados, com padronização de colunas, tipos, valores ausentes e duplicidades.
+Durante o processamento são adicionados metadados técnicos:
 
-### Gold
+- `entidade_origem`
+- `modo_ingestao`
+- `data_ingestao_bronze`
 
-Camada analítica futura, preparada para dashboards, estatísticas e modelos de IA.
+Exemplo de saída:
 
-## Como iniciar
+```text
+data/bronze/alunos/alunos_processado.parquet
+```
 
-Crie o ambiente virtual:
+## Como Executar
+
+### 1. Criar e ativar ambiente virtual
 
 ```bash
 python -m venv .venv
 ```
 
-Ative no Windows PowerShell:
+No Windows PowerShell:
 
 ```bash
 .venv\Scripts\Activate.ps1
 ```
 
-Instale as dependências:
+### 2. Instalar dependências mínimas
+
+Ainda não há um arquivo `requirements.txt` no repositório. Para executar o pipeline atual, instale:
 
 ```bash
-pip install -r requirements.txt
+pip install pandas pyarrow openpyxl
 ```
 
-Crie o arquivo `.env` com base no `.env.example`:
+Para usar os notebooks com BigQuery, também pode ser necessário instalar:
+
+```bash
+pip install jupyter google-cloud-bigquery pandas-gbq python-dotenv
+```
+
+### 3. Configurar variáveis de ambiente
+
+Copie o arquivo de exemplo:
+
+```bash
+copy .env.example .env
+```
+
+Preencha o projeto Google Cloud:
 
 ```env
 GCP_PROJECT_ID=seu-project-id-google-cloud
 ```
 
-Depois abra o notebook:
+### 4. Baixar ou disponibilizar os dados brutos
+
+Use o notebook `notebooks/01_download_bronze_bigquery.ipynb` ou as consultas em `queries/bronze/` para obter os dados.
+
+Depois, salve os arquivos nas pastas esperadas pelo pipeline:
 
 ```text
-notebooks/01_download_bronze_bigquery.ipynb
+data/bronze/alunos/
+data/bronze/municipio/
+data/bronze/uf/
+data/bronze/meta_alfabetizacao_brasil/
+data/bronze/meta_alfabetizacao_uf/
+data/bronze/meta_alfabetizacao_municipio/
 ```
 
-## Git
+Os dados locais não são versionados no Git.
 
-Primeiro commit sugerido:
+### 5. Processar a camada Bronze
 
 ```bash
-git init
-git add .
-git commit -m "chore: estrutura inicial do projeto"
+python main.py
 ```
+
+O script processa todas as entidades configuradas em `src/bronze/config.py`.
+
+## Documentação Analítica
+
+Os principais artefatos de entendimento e qualidade estão em `docs/`:
+
+- `crisp_dm.md`: visão do projeto segundo as etapas do CRISP-DM;
+- `dicionario_dados_bronze.md`: perfil técnico inicial das tabelas Bronze;
+- `insumos_modelagem_bronze.md`: chaves candidatas, relacionamentos e backlog para Silver.
+
+## Próximos Passos
+
+- Criar `requirements.txt` ou `pyproject.toml` para reproduzir o ambiente.
+- Corrigir a codificação dos documentos existentes que estão com acentuação corrompida.
+- Evoluir as transformações da camada Silver.
+- Implementar validações automatizadas de qualidade.
+- Definir métricas e tabelas finais da camada Gold.
+- Automatizar a extração do BigQuery e a execução do pipeline.
