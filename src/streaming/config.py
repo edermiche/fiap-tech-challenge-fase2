@@ -29,6 +29,12 @@ INTERVALO_PRODUCER_SEGUNDOS = 1.0
 INTERVALO_CONSUMER_SEGUNDOS = 2.0
 MAX_CICLOS_VAZIOS_PADRAO = 5
 
+# Nome do Kinesis Data Stream usado quando o producer roda com
+# --destino kinesis. Vem do .env para não fixar infraestrutura no código.
+import os
+
+KINESIS_STREAM_NAME = os.getenv("KINESIS_STREAM_NAME", "fiap-alfabetizacao-stream")
+
 # Colunas de metadados adicionadas pelo pipeline batch que não fazem
 # parte do evento "cru" e são removidas antes do envio.
 COLUNAS_METADADOS_BATCH = [
