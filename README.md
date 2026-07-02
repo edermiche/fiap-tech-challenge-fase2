@@ -140,6 +140,20 @@ Mecanismos implementados ao longo das camadas:
 - **Chaves de relacionamento**: validação de integridade referencial entre tabelas (cobertura de `id_municipio`, `sigla_uf`, `ano` entre origens — documentada nos insumos de modelagem)
 - **Consistência**: flags de validação de intervalo em todos os campos percentuais; notebooks de quality checks (`03_quality_checks.ipynb`)
 
+### Validadores visuais das camadas (`app/`)
+
+Aplicações Flask para inspecionar os arquivos parquet gerados em cada camada pelo navegador — úteis para conferência rápida de qualidade sem abrir notebooks:
+
+- `app/bronze_validator.py`, `app/silver_validator.py`, `app/gold_validator.py`: inspeção por camada
+- `app/medallion_validator.py`: navegação entre as três camadas em uma única interface
+
+Permitem listar tabelas, ver resumo de linhas/colunas, agrupar por eixo e métrica, gerar gráfico de barras, consultar a distribuição de `status_meta` e visualizar amostras.
+
+```bash
+python app/medallion_validator.py
+# acesse http://127.0.0.1:5000
+```
+
 ---
 
 ## 6. Decisões Arquiteturais (trade-offs)
@@ -189,6 +203,7 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 | Parquet | Armazenamento em todas as camadas | Colunar, comprimido, schema embutido; leitura seletiva de colunas/partições |
 | BigQuery (Base dos Dados) | Fonte dos dados públicos | Dados INEP já estruturados e versionados; SQL padrão; free tier cobre o projeto |
 | Jupyter Notebooks | Transformações Silver/Gold e análises | Documentação executável — código, resultado e decisão no mesmo artefato |
+| Flask | Validadores visuais das camadas (`app/`) | Inspeção rápida dos parquets pelo navegador, sem depender de notebook |
 | Git + GitHub (branches + PRs) | Versionamento e colaboração | Evolução rastreável do pipeline por feature branches e Pull Requests |
 | AWS (S3, Kinesis, Lambda) | Arquitetura alvo em nuvem | Serverless, pay-per-use, aderente ao volume do projeto (ver seção FinOps) |
 
@@ -198,6 +213,7 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 
 ```text
 .
+├── app/                           # validadores Flask das camadas (inspeção via navegador)
 ├── data/                          # data lake local (não versionado)
 │   ├── bronze/                    #   brutos por entidade + partições execution_date
 │   ├── silver/                    #   tabelas tratadas particionadas

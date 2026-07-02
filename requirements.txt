@@ -9,5 +9,8 @@ db-dtypes>=1.2
 python-dotenv>=1.0
 pydata-google-auth>=1.8
 
+# Validadores visuais das camadas (app/)
+flask>=3.0
+
 # Notebooks
 jupyter>=1.0
