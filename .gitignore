@@ -22,3 +22,17 @@ data/streaming/*
 
 .DS_Store
 Thumbs.db
+
+# Temporários do drawio
+docs/.$*
+
+# Terraform
+infra/.terraform/
+infra/build/
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# Credenciais GCP (nunca versionar)
+*service-account*.json
+*credentials*.json
