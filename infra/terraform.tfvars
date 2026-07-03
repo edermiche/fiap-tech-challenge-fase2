@@ -3,8 +3,8 @@
 
 email_alertas = "lucas.alexsant2@gmail.com"
 
-# Habilitar somente depois de carregar o secret da service account GCP:
-agendamento_habilitado = false
+# Secret da service account GCP carregado em 2026-07-03; pipeline validado.
+agendamento_habilitado = true
 
 # Plugar as próximas camadas quando os scripts existirem em src/glue/:
 pipeline_jobs = ["bronze_ingestao"]
