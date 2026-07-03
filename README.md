@@ -35,8 +35,8 @@ flowchart LR
     subgraph Ingestão
         BATCH["Ingestão Batch<br/>(download_bigquery.py)"]
         PROD["Producer<br/>(eventos simulados)"]
-        FILA["Stream<br/>(fila de micro-lotes)"]
-        CONS["Consumer"]
+        FILA["Stream<br/>(fila local ou Kinesis)"]
+        CONS["Consumer<br/>(local ou Lambda)"]
     end
 
     subgraph "Arquitetura Medalhão"
@@ -61,25 +61,27 @@ flowchart LR
 ### Fluxo de dados
 
 1. **Extração batch**: `src/bronze/download_bigquery.py` consulta a Base dos Dados no BigQuery (com dry run de custo antes de cada execução) e grava as 6 entidades em parquet, particionadas por `execution_date`.
-2. **Ingestão streaming (simulada)**: `src/streaming/producer.py` reemite medições de alunos como eventos em micro-lotes JSON; `src/streaming/consumer.py` consome a fila continuamente, adiciona metadados de ingestão e grava na Bronze particionado por ano.
+2. **Ingestão streaming**: `src/streaming/producer.py` reemite medições de alunos como eventos em micro-lotes — para a fila local (modo padrão, sem AWS) ou para o Kinesis Data Streams (`--destino kinesis`). O consumo é feito pelo `consumer.py` (local) ou pelo Lambda `consumer_lambda.py` (nuvem), que adicionam metadados de ingestão e gravam na Bronze particionado por ano.
 3. **Consolidação Bronze**: `main.py` unifica os arquivos brutos de cada entidade com metadados técnicos (`entidade_origem`, `modo_ingestao`, `data_ingestao_bronze`).
 4. **Transformação Silver**: `notebooks/02_silver_transformacoes.ipynb` limpa, padroniza tipos, remove duplicidades, normaliza chaves, cria flags de qualidade e modela dimensões e fatos.
 5. **Camada Gold**: `notebooks/04_gold_analitica.ipynb` integra resultados e metas e materializa datasets prontos para consumo analítico.
 
-### Mapeamento para nuvem (AWS)
+### Implementação em nuvem (AWS)
 
-A simulação local espelha, componente a componente, a arquitetura alvo em AWS:
+A pipeline de streaming e o data lake estão **implementados e testados na AWS** (região `sa-east-1` — dados públicos brasileiros em região brasileira):
 
-| Componente local | Equivalente AWS | Papel |
+| Componente local (simulação) | Implementação AWS | Status |
 |---|---|---|
-| `data/` (parquet em camadas) | S3 (buckets bronze/silver/gold) | Data lake |
-| `data/streaming/fila/` (micro-lotes JSON) | Kinesis Data Streams | Stream de eventos |
-| `src/streaming/consumer.py` | Lambda (trigger no Kinesis) | Processamento de eventos |
-| `src/bronze/download_bigquery.py` + `main.py` | Glue Job / Lambda agendado (EventBridge) | Ingestão batch |
-| Notebooks Silver/Gold | Glue Job ou Databricks | Transformações |
-| Prints/logs de execução | CloudWatch Logs + Metrics | Observabilidade |
+| `data/` (parquet em camadas) | S3 — prefixos `bronze/`, `silver/`, `gold/` no bucket do lake | ✅ implantado (63+ arquivos) |
+| `data/streaming/fila/` (micro-lotes JSON) | Kinesis Data Streams (1 shard provisionado) | ✅ implantado |
+| `src/streaming/consumer.py` | Lambda `consumer_lambda.py` com trigger no Kinesis + layer AWSSDKPandas | ✅ implantado |
+| Prints/logs de execução | CloudWatch Logs (lotes processados por invocação) | ✅ ativo |
+| `src/bronze/download_bigquery.py` + `main.py` | Glue Job / Lambda agendado (EventBridge) | evolução futura |
+| Notebooks Silver/Gold | Glue Job ou Databricks | evolução futura |
 
-Essa correspondência é deliberada: o código do consumer local é o corpo do handler do Lambda, e o producer muda apenas o destino (gravação em disco → `put_records` no Kinesis via boto3).
+O desenho local e o da nuvem são deliberadamente espelhados: o handler do Lambda (`src/streaming/consumer_lambda.py`) reimplementa o mesmo fluxo do consumer local, e o producer alterna entre os destinos com uma flag (`--destino kinesis` usa `put_records` via boto3). Isso permite que qualquer avaliador execute a simulação completa sem conta AWS, e que a versão em nuvem seja reproduzida com um comando via CloudFormation (`infra/cloudformation.yaml` — ver [infra/README_infra.md](infra/README_infra.md)).
+
+Teste de ponta a ponta realizado: 500 eventos reais de alunos enviados pelo producer → Kinesis → Lambda (5 lotes de 100) → parquet particionado por ano no S3. Evidências (prints do console S3, métricas do Kinesis e logs do CloudWatch) em [docs/evidencias/](docs/evidencias/).
 
 ---
 
@@ -108,11 +110,11 @@ A decisão segue o princípio de usar streaming apenas onde a semântica do dado
 
 ### 🥈 Silver — dados tratados
 
-12 tabelas modeladas em dimensões e fatos ([dicionário completo](docs/dicionario_dados_silver.md)):
+14 tabelas modeladas em dimensões e fatos ([dicionário completo](docs/dicionario_dados_silver.md)):
 
 - **Dimensões**: `dim_uf`, `dim_municipio`, `dim_escola`
-- **Fatos de resultado**: `fato_resultado_brasil`, `fato_resultado_uf`, `fato_resultado_municipio`, `fato_resultado_meta_uf`
-- **Fatos de metas** (colunas → linhas): `fato_meta_anual_brasil`, `fato_meta_anual_uf`
+- **Fatos de resultado**: `fato_resultado_brasil`, `fato_resultado_uf`, `fato_resultado_municipio`, `fato_resultado_meta_uf`, `fato_resultado_meta_municipio`
+- **Fatos de metas** (colunas → linhas): `fato_meta_anual_brasil`, `fato_meta_anual_uf`, `fato_meta_anual_municipio`
 - **Distribuição por nível**: `fato_distribuicao_nivel_uf`, `fato_distribuicao_nivel_municipio`
 - **Granularidade aluno**: `fato_aluno_alfabetizacao` (3,87 mi de linhas com flags de qualidade)
 
@@ -170,8 +172,9 @@ python app/medallion_validator.py
 
 ### Monitoramento
 
-- Estado atual: logs estruturados de execução em todas as etapas (entidade processada, volumetria, arquivos gerados), contagem de lotes/eventos no streaming, validações com relatório de aprovação/reprovação
-- Arquitetura alvo (AWS): CloudWatch Logs para os jobs, métricas de Kinesis (records in/out, iterator age) para latência do stream, alarmes de falha de ingestão via CloudWatch Alarms + SNS
+- **Local**: logs estruturados de execução em todas as etapas (entidade processada, volumetria, arquivos gerados), contagem de lotes/eventos no streaming, validações com relatório de aprovação/reprovação
+- **Nuvem (ativo)**: CloudWatch Logs registra cada invocação do Lambda consumer (eventos processados, arquivos gravados); as métricas do Kinesis (`IncomingRecords`, `GetRecords.IteratorAgeMilliseconds`) medem volume e latência do stream; o trigger expõe `LastProcessingResult` para diagnóstico de falhas de ingestão
+- Evolução: alarmes CloudWatch + SNS para notificação ativa de falhas
 
 ### FinOps
 
@@ -180,8 +183,8 @@ Decisões que reduzem custo operacional:
 - **Parquet + particionamento** (`execution_date`, `ano`): leitura seletiva de partições reduz bytes escaneados — em Athena/BigQuery, custo é proporcional a bytes lidos
 - **Dry run obrigatório antes da extração**: `download_bigquery.py` estima os bytes de cada consulta antes de executar e impõe `maximum_bytes_billed` como trava de custo (a extração completa processa ~260 MB, dentro do free tier de 1 TB/mês do BigQuery — custo real: R$ 0)
 - **Cache de resultados**: re-execuções não repetem consultas (arquivos existentes são pulados)
-- **Serverless por padrão na arquitetura alvo**: Lambda e Kinesis cobram por uso; não há cluster ocioso
-- **Estimativa da arquitetura AWS no nosso volume**: S3 (~1 GB) + Kinesis (1 shard sob demanda) + Lambda (invocações esporádicas) ≈ **menos de US$ 5/mês**, dominado pelo custo fixo mínimo do stream
+- **Serverless por padrão**: Lambda e Kinesis cobram por uso; não há cluster ocioso. A janela de batching de 5s no trigger agrupa eventos e reduz invocações do Lambda
+- **Custo real medido da arquitetura AWS no nosso volume**: S3 (~150 MB) + Kinesis (1 shard provisionado, ~US$ 0,02/h) + Lambda (invocações esporádicas no free tier) ≈ **menos de US$ 5/mês** — e o CloudFormation permite subir a stack só quando necessário e derrubar depois (`delete-stack`), zerando o custo fixo
 
 ---
 
@@ -205,7 +208,8 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 | Jupyter Notebooks | Transformações Silver/Gold e análises | Documentação executável — código, resultado e decisão no mesmo artefato |
 | Flask | Validadores visuais das camadas (`app/`) | Inspeção rápida dos parquets pelo navegador, sem depender de notebook |
 | Git + GitHub (branches + PRs) | Versionamento e colaboração | Evolução rastreável do pipeline por feature branches e Pull Requests |
-| AWS (S3, Kinesis, Lambda) | Arquitetura alvo em nuvem | Serverless, pay-per-use, aderente ao volume do projeto (ver seção FinOps) |
+| AWS (S3, Kinesis, Lambda) | Data lake e streaming em nuvem | Serverless, pay-per-use, aderente ao volume do projeto (ver seção FinOps) |
+| CloudFormation | IaC da pipeline de streaming (`infra/`) | Infraestrutura reproduzível com um comando, sem compartilhar credenciais |
 
 ---
 
@@ -222,9 +226,13 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 ├── docs/
 │   ├── crisp_dm.md                # abordagem CRISP-DM do projeto
 │   ├── dicionario_dados_bronze.md # perfil técnico das tabelas Bronze
-│   ├── dicionario_dados_silver.md # dicionário das 12 tabelas Silver
+│   ├── dicionario_dados_silver.md # dicionário das tabelas Silver
 │   ├── dicionario_dados_gold.md   # dicionário das 7 tabelas Gold
+│   ├── evidencias/                # prints da execução em nuvem (S3, Kinesis, Lambda)
 │   └── insumos_modelagem_bronze.md# chaves, relacionamentos e backlog
+├── infra/
+│   ├── cloudformation.yaml        # IaC: Kinesis + Lambda + role IAM
+│   └── README_infra.md            # deploy, teste e teardown
 ├── notebooks/
 │   ├── 01_download_bronze_bigquery.ipynb
 │   ├── 01_entendimento_dados_bronze.ipynb
@@ -233,8 +241,9 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 │   └── 04_gold_analitica.ipynb
 ├── queries/bronze/                # SQL de extração (Base dos Dados)
 ├── src/
+│   ├── aws/                       # upload do data lake para o S3
 │   ├── bronze/                    # ingestão batch (leitura, gravação, download BigQuery)
-│   └── streaming/                 # producer e consumer da ingestão streaming
+│   └── streaming/                 # producer, consumer local e consumer Lambda
 ├── main.py                        # consolidação da camada Bronze
 ├── requirements.txt
 └── .env.example
@@ -276,7 +285,7 @@ python main.py
 jupyter notebook
 ```
 
-### Pipeline streaming (dois terminais)
+### Pipeline streaming — simulação local (dois terminais, sem AWS)
 
 ```bash
 # Terminal 1 — consumer (inicie primeiro)
@@ -288,6 +297,25 @@ python -m src.streaming.producer --total-eventos 1000 --tamanho-lote 100
 
 O consumer encerra sozinho após ciclos consecutivos de fila vazia (configurável via `--max-ciclos-vazios`).
 
+### Pipeline streaming — AWS
+
+Com a stack provisionada (ver [infra/README_infra.md](infra/README_infra.md)) e `AWS_REGION`/`KINESIS_STREAM_NAME` no `.env`:
+
+```bash
+# Envia eventos reais ao Kinesis; o Lambda consome e grava no S3 automaticamente
+python -m src.streaming.producer --destino kinesis --total-eventos 500
+
+# Acompanhar o processamento
+aws logs tail /aws/lambda/fiap-alfabetizacao-consumer --follow
+```
+
+### Upload do data lake para o S3
+
+```bash
+python -m src.aws.upload_s3 --dry-run    # lista o que seria enviado
+python -m src.aws.upload_s3              # sobe bronze, silver e gold
+```
+
 ---
 
 ## 12. Metodologia
@@ -298,8 +326,9 @@ O projeto segue a abordagem **CRISP-DM** (entendimento do negócio → entendime
 
 ## 13. Próximos Passos
 
-- [ ] Provisionamento AWS via IaC (S3 + Kinesis Data Streams + Lambda) com evidências de execução
+- [x] Provisionamento AWS via IaC (S3 + Kinesis Data Streams + Lambda) com evidências de execução
+- [x] Monitoramento com CloudWatch (logs e métricas do stream/Lambda)
 - [ ] Atualização do notebook de quality checks para a estrutura atual da Silver
-- [ ] Monitoramento com CloudWatch (logs, métricas e alarmes)
+- [ ] Alarmes CloudWatch + SNS para notificação ativa de falhas
 - [ ] Enriquecimento com fontes externas (Censo Escolar, IBGE) para os casos de uso de IA
 - [ ] Vídeo executivo (até 5 min)
