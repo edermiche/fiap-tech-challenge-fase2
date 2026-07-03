@@ -76,10 +76,11 @@ A pipeline de streaming e o data lake estão **implementados e testados na AWS**
 | `data/streaming/fila/` (micro-lotes JSON) | Kinesis Data Streams (1 shard provisionado) | ✅ implantado |
 | `src/streaming/consumer.py` | Lambda `consumer_lambda.py` com trigger no Kinesis + layer AWSSDKPandas | ✅ implantado |
 | Prints/logs de execução | CloudWatch Logs (lotes processados por invocação) | ✅ ativo |
-| `src/bronze/download_bigquery.py` + `main.py` | Glue Job / Lambda agendado (EventBridge) | evolução futura |
-| Notebooks Silver/Gold | Glue Job ou Databricks | evolução futura |
+| `src/bronze/download_bigquery.py` | Glue Job Python Shell `bronze-ingestao` (BigQuery → S3, service account no Secrets Manager) dentro do Glue Workflow, disparado por EventBridge Scheduler | ✅ implantado |
+| Notebooks Silver/Gold | Glue Jobs plugáveis no mesmo workflow (encadeamento condicional já provisionado) | 🔜 aguardando transformações |
+| — | Alertas de falha de job: EventBridge rule → SNS (e-mail) | ✅ implantado |
 
-O desenho local e o da nuvem são deliberadamente espelhados: o handler do Lambda (`src/streaming/consumer_lambda.py`) reimplementa o mesmo fluxo do consumer local, e o producer alterna entre os destinos com uma flag (`--destino kinesis` usa `put_records` via boto3). Isso permite que qualquer avaliador execute a simulação completa sem conta AWS, e que a versão em nuvem seja reproduzida com um comando via CloudFormation (`infra/cloudformation.yaml` — ver [infra/README_infra.md](infra/README_infra.md)).
+O desenho local e o da nuvem são deliberadamente espelhados: o handler do Lambda (`src/streaming/consumer_lambda.py`) reimplementa o mesmo fluxo do consumer local, e o producer alterna entre os destinos com uma flag (`--destino kinesis` usa `put_records` via boto3). Isso permite que qualquer avaliador execute a simulação completa sem conta AWS, e que a versão em nuvem seja reproduzida com um comando via Terraform (`infra/` — ver [infra/README.md](infra/README.md)), incluindo o import dos recursos pré-existentes para o state.
 
 Teste de ponta a ponta realizado: 500 eventos reais de alunos enviados pelo producer → Kinesis → Lambda (5 lotes de 100) → parquet particionado por ano no S3. Evidências (prints do console S3, métricas do Kinesis e logs do CloudWatch) em [docs/evidencias/](docs/evidencias/).
 
@@ -184,7 +185,7 @@ Decisões que reduzem custo operacional:
 - **Dry run obrigatório antes da extração**: `download_bigquery.py` estima os bytes de cada consulta antes de executar e impõe `maximum_bytes_billed` como trava de custo (a extração completa processa ~260 MB, dentro do free tier de 1 TB/mês do BigQuery — custo real: R$ 0)
 - **Cache de resultados**: re-execuções não repetem consultas (arquivos existentes são pulados)
 - **Serverless por padrão**: Lambda e Kinesis cobram por uso; não há cluster ocioso. A janela de batching de 5s no trigger agrupa eventos e reduz invocações do Lambda
-- **Custo real medido da arquitetura AWS no nosso volume**: S3 (~150 MB) + Kinesis (1 shard provisionado, ~US$ 0,02/h) + Lambda (invocações esporádicas no free tier) ≈ **menos de US$ 5/mês** — e o CloudFormation permite subir a stack só quando necessário e derrubar depois (`delete-stack`), zerando o custo fixo
+- **Custo real medido da arquitetura AWS no nosso volume**: S3 (~150 MB) + Kinesis (1 shard provisionado, ~US$ 0,02/h) + Lambda (invocações esporádicas no free tier) ≈ **menos de US$ 5/mês** — e o Terraform permite subir a infra só quando necessário e derrubar depois (`terraform destroy`, ou destroy direcionado do Kinesis, o único custo fixo relevante), zerando o custo ocioso. Os jobs Glue rodam em Python Shell (1 DPU), a fração de centavo por execução
 
 ---
 
@@ -208,8 +209,8 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 | Jupyter Notebooks | Transformações Silver/Gold e análises | Documentação executável — código, resultado e decisão no mesmo artefato |
 | Flask | Validadores visuais das camadas (`app/`) | Inspeção rápida dos parquets pelo navegador, sem depender de notebook |
 | Git + GitHub (branches + PRs) | Versionamento e colaboração | Evolução rastreável do pipeline por feature branches e Pull Requests |
-| AWS (S3, Kinesis, Lambda) | Data lake e streaming em nuvem | Serverless, pay-per-use, aderente ao volume do projeto (ver seção FinOps) |
-| CloudFormation | IaC da pipeline de streaming (`infra/`) | Infraestrutura reproduzível com um comando, sem compartilhar credenciais |
+| AWS (S3, Kinesis, Lambda, Glue, EventBridge, SNS) | Data lake, streaming e pipeline batch em nuvem | Serverless, pay-per-use, aderente ao volume do projeto (ver seção FinOps) |
+| Terraform | IaC de toda a infra AWS (`infra/`) | Infraestrutura reproduzível com um comando; recursos pré-existentes importados via `import` blocks |
 
 ---
 
@@ -230,9 +231,9 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 │   ├── dicionario_dados_gold.md   # dicionário das 7 tabelas Gold
 │   ├── evidencias/                # prints da execução em nuvem (S3, Kinesis, Lambda)
 │   └── insumos_modelagem_bronze.md# chaves, relacionamentos e backlog
-├── infra/
-│   ├── cloudformation.yaml        # IaC: Kinesis + Lambda + role IAM
-│   └── README_infra.md            # deploy, teste e teardown
+├── infra/                         # IaC Terraform de toda a infra AWS
+│   ├── *.tf                       #   S3, Kinesis, Lambda, Glue, Scheduler, SNS
+│   └── README.md                  #   apply, secret GCP, como plugar silver/gold
 ├── notebooks/
 │   ├── 01_download_bronze_bigquery.ipynb
 │   ├── 01_entendimento_dados_bronze.ipynb
@@ -243,6 +244,7 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 ├── src/
 │   ├── aws/                       # upload do data lake para o S3
 │   ├── bronze/                    # ingestão batch (leitura, gravação, download BigQuery)
+│   ├── glue/                      # scripts dos jobs Glue (ingestão bronze na nuvem)
 │   └── streaming/                 # producer, consumer local e consumer Lambda
 ├── main.py                        # consolidação da camada Bronze
 ├── requirements.txt
@@ -299,7 +301,7 @@ O consumer encerra sozinho após ciclos consecutivos de fila vazia (configuráve
 
 ### Pipeline streaming — AWS
 
-Com a stack provisionada (ver [infra/README_infra.md](infra/README_infra.md)) e `AWS_REGION`/`KINESIS_STREAM_NAME` no `.env`:
+Com a infra provisionada (ver [infra/README.md](infra/README.md)) e `AWS_REGION`/`KINESIS_STREAM_NAME` no `.env`:
 
 ```bash
 # Envia eventos reais ao Kinesis; o Lambda consome e grava no S3 automaticamente
@@ -316,6 +318,16 @@ python -m src.aws.upload_s3 --dry-run    # lista o que seria enviado
 python -m src.aws.upload_s3              # sobe bronze, silver e gold
 ```
 
+### Pipeline batch — AWS (Glue Workflow)
+
+Com o secret da service account GCP carregado (ver [infra/README.md](infra/README.md)):
+
+```bash
+# Dispara a ingestão bronze na nuvem (BigQuery -> S3); silver e gold
+# entram no mesmo workflow quando as transformações forem plugadas
+aws glue start-workflow-run --name fiap-alfabetizacao-pipeline
+```
+
 ---
 
 ## 12. Metodologia
@@ -326,9 +338,12 @@ O projeto segue a abordagem **CRISP-DM** (entendimento do negócio → entendime
 
 ## 13. Próximos Passos
 
-- [x] Provisionamento AWS via IaC (S3 + Kinesis Data Streams + Lambda) com evidências de execução
-- [x] Monitoramento com CloudWatch (logs e métricas do stream/Lambda)
+- [x] Provisionamento AWS via IaC (Terraform: S3 + Kinesis + Lambda + Glue + EventBridge + SNS) com evidências de execução
+- [x] Monitoramento com CloudWatch (logs e métricas do stream/Lambda/Glue)
+- [x] Alertas de falha de job Glue via EventBridge + SNS (e-mail)
+- [x] Ingestão batch na nuvem (Glue Job `bronze-ingestao` + Glue Workflow + Scheduler)
+- [ ] Carregar a service account GCP no Secrets Manager e habilitar o agendamento
+- [ ] Plugar Silver e Gold como Glue Jobs no workflow (transformações em construção local)
 - [ ] Atualização do notebook de quality checks para a estrutura atual da Silver
-- [ ] Alarmes CloudWatch + SNS para notificação ativa de falhas
 - [ ] Enriquecimento com fontes externas (Censo Escolar, IBGE) para os casos de uso de IA
 - [ ] Vídeo executivo (até 5 min)
