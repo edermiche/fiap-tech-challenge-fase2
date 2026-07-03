@@ -19,7 +19,10 @@ locals {
   # leem e gravam no S3 não precisam de entrada aqui.
   argumentos_por_job = {
     bronze_ingestao = {
-      "--additional-python-modules" = "google-cloud-bigquery,google-cloud-bigquery-storage,db-dtypes"
+      # Versões pinadas para o Python 3.9 do Glue Python Shell: as mais novas
+      # não publicam wheels cp39 e o pip tenta compilar da fonte (sem cmake
+      # no ambiente). O pyarrow vem do library-set analytics, não instalar.
+      "--additional-python-modules" = "google-cloud-bigquery==3.13.0,google-cloud-bigquery-storage==2.24.0,db-dtypes==1.2.0,grpcio==1.62.2,protobuf==4.25.3"
       "--GCP_SECRET_NAME"           = aws_secretsmanager_secret.gcp_service_account.name
       "--MAX_BYTES_BILLED"          = var.max_bytes_billed
       "--QUERIES_PREFIX"            = "glue/queries/bronze"
