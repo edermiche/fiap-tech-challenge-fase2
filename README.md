@@ -60,11 +60,13 @@ flowchart LR
 
 ### Fluxo de dados
 
-1. **Extração batch**: `src/bronze/download_bigquery.py` consulta a Base dos Dados no BigQuery (com dry run de custo antes de cada execução) e grava as 6 entidades em parquet, particionadas por `execution_date`.
+1. **Extração batch**: `src/bronze/download_bigquery.py` consulta a Base dos Dados no BigQuery (com dry run de custo antes de cada execução) e grava as 7 entidades em parquet, particionadas por `execution_date`.
 2. **Ingestão streaming**: `src/streaming/producer.py` reemite medições de alunos como eventos em micro-lotes — para a fila local (modo padrão, sem AWS) ou para o Kinesis Data Streams (`--destino kinesis`). O consumo é feito pelo `consumer.py` (local) ou pelo Lambda `consumer_lambda.py` (nuvem), que adicionam metadados de ingestão e gravam na Bronze particionado por ano.
-3. **Consolidação Bronze**: `main.py` unifica os arquivos brutos de cada entidade com metadados técnicos (`entidade_origem`, `modo_ingestao`, `data_ingestao_bronze`).
-4. **Transformação Silver**: `notebooks/02_silver_transformacoes.ipynb` limpa, padroniza tipos, remove duplicidades, normaliza chaves, cria flags de qualidade e modela dimensões e fatos.
-5. **Camada Gold**: `notebooks/04_gold_analitica.ipynb` integra resultados e metas e materializa datasets prontos para consumo analítico.
+3. **Consolidação Bronze**: `src/bronze/processar_bronze.py` unifica os arquivos brutos de cada entidade com metadados técnicos (`entidade_origem`, `modo_ingestao`, `data_ingestao_bronze`).
+4. **Transformação Silver**: `src/silver/processar_silver.py` limpa, padroniza tipos, remove duplicidades, normaliza chaves, cria flags de qualidade e modela dimensões e fatos.
+5. **Camada Gold**: `src/gold/processar_gold.py` integra resultados e metas e materializa datasets prontos para consumo analítico.
+
+`main.py` executa as três etapas acima em sequência (bronze → silver → gold) com um único comando.
 
 ### Implementação em nuvem (AWS)
 
@@ -77,7 +79,7 @@ A pipeline de streaming e o data lake estão **implementados e testados na AWS**
 | `src/streaming/consumer.py` | Lambda `consumer_lambda.py` com trigger no Kinesis + layer AWSSDKPandas | ✅ implantado |
 | Prints/logs de execução | CloudWatch Logs (lotes processados por invocação) | ✅ ativo |
 | `src/bronze/download_bigquery.py` | Glue Job Python Shell `bronze-ingestao` (BigQuery → S3, service account no Secrets Manager) dentro do Glue Workflow, disparado por EventBridge Scheduler | ✅ implantado |
-| Notebooks Silver/Gold | Glue Jobs plugáveis no mesmo workflow (encadeamento condicional já provisionado) | 🔜 aguardando transformações |
+| `src/silver` e `src/gold` | Glue Jobs plugáveis no mesmo workflow (encadeamento condicional já provisionado; `pipeline_jobs` hoje só lista `bronze_ingestao`) | 🔜 transformações prontas localmente, ainda não plugadas no workflow |
 | — | Alertas de falha de job: EventBridge rule → SNS (e-mail) | ✅ implantado |
 
 O desenho local e o da nuvem são deliberadamente espelhados: o handler do Lambda (`src/streaming/consumer_lambda.py`) reimplementa o mesmo fluxo do consumer local, e o producer alterna entre os destinos com uma flag (`--destino kinesis` usa `put_records` via boto3). Isso permite que qualquer avaliador execute a simulação completa sem conta AWS, e que a versão em nuvem seja reproduzida com um comando via Terraform (`infra/` — ver [infra/README.md](infra/README.md)), incluindo o import dos recursos pré-existentes para o state.
@@ -102,22 +104,23 @@ A decisão segue o princípio de usar streaming apenas onde a semântica do dado
 
 ### 🥉 Bronze — dados brutos
 
-- 6 entidades: `alunos` (3,87 mi de linhas), `municipio`, `uf`, `meta_alfabetizacao_brasil`, `meta_alfabetizacao_uf`, `meta_alfabetizacao_municipio`
+- 7 entidades: `alunos` (3,87 mi de linhas), `municipio`, `uf`, `meta_alfabetizacao_brasil`, `meta_alfabetizacao_uf`, `meta_alfabetizacao_municipio`, `bolsa_familia_municipio`
 - Armazenamento sem transformações significativas, histórico preservado por partição `execution_date=YYYY-MM-DD`
 - Eventos de streaming gravados em `alunos_streaming/ano=YYYY/`
 - Metadados técnicos de rastreabilidade em todas as entidades
 
-**Volume de dados**: o projeto trabalha com todo o histórico disponível do Indicador Criança Alfabetizada (avaliações de 2023 e 2024, metas projetadas até 2030). Indicador exige série histórica para comparação — descartar anos inviabilizaria a análise de evolução temporal.
+**Volume de dados**: o projeto trabalha com todo o histórico disponível do Indicador Criança Alfabetizada (avaliação SAEB de 2023 e 2024 em todas as granularidades; Brasil e UF já têm um ciclo de acompanhamento adicional para 2025; metas projetadas até 2030). Indicador exige série histórica para comparação — descartar anos inviabilizaria a análise de evolução temporal.
 
 ### 🥈 Silver — dados tratados
 
-14 tabelas modeladas em dimensões e fatos ([dicionário completo](docs/dicionario_dados_silver.md)):
+16 tabelas modeladas em dimensões e fatos ([dicionário completo](docs/dicionario_dados_silver.md)):
 
 - **Dimensões**: `dim_uf`, `dim_municipio`, `dim_escola`
 - **Fatos de resultado**: `fato_resultado_brasil`, `fato_resultado_uf`, `fato_resultado_municipio`, `fato_resultado_meta_uf`, `fato_resultado_meta_municipio`
 - **Fatos de metas** (colunas → linhas): `fato_meta_anual_brasil`, `fato_meta_anual_uf`, `fato_meta_anual_municipio`
 - **Distribuição por nível**: `fato_distribuicao_nivel_uf`, `fato_distribuicao_nivel_municipio`
 - **Granularidade aluno**: `fato_aluno_alfabetizacao` (3,87 mi de linhas com flags de qualidade)
+- **Enriquecimento externo**: `fato_bolsa_familia_municipio` (total de beneficiários e valor pago por município/ano, ainda não consumida na Gold)
 
 Transformações aplicadas: padronização de textos e códigos identificadores, conversão de tipos, remoção de duplicidades exatas, normalização de chaves, unpivot de metas anuais e níveis de proficiência, flags de validação (percentuais em [0,100], chaves preenchidas, valores não negativos) — registros inválidos são sinalizados, não descartados, preservando rastreabilidade.
 
@@ -147,14 +150,14 @@ Mecanismos implementados ao longo das camadas:
 
 Aplicações Flask para inspecionar os arquivos parquet gerados em cada camada pelo navegador — úteis para conferência rápida de qualidade sem abrir notebooks:
 
-- `app/bronze_validator.py`, `app/silver_validator.py`, `app/gold_validator.py`: inspeção por camada
-- `app/medallion_validator.py`: navegação entre as três camadas em uma única interface
-
-Permitem listar tabelas, ver resumo de linhas/colunas, agrupar por eixo e métrica, gerar gráfico de barras, consultar a distribuição de `status_meta` e visualizar amostras.
+- `app/medallion_validator.py`: navegação entre Bronze, Silver e Gold em uma única interface (lista tabelas, resume linhas/colunas, agrupa por eixo e métrica, gera gráfico de barras, consulta a distribuição de `status_meta` e mostra amostras)
+- `app/dashboard_alfabetizacao.py`: dashboard analítico da Gold (Brasil/UF/Município) com filtros de ano, rede e UF
+- `app/mapa_brasil_metas.py`: mapa do Brasil (SVG) colorido por status da meta, com drill-down por estado e por município
 
 ```bash
-python app/medallion_validator.py
-# acesse http://127.0.0.1:5000
+python app/medallion_validator.py       # http://127.0.0.1:5000
+python app/dashboard_alfabetizacao.py   # http://127.0.0.1:5003
+python app/mapa_brasil_metas.py         # http://127.0.0.1:5004
 ```
 
 ---
@@ -206,7 +209,7 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 | Python 3.12 + pandas + pyarrow | Todo o pipeline | Stack padrão de dados; volume do projeto não justifica engine distribuída |
 | Parquet | Armazenamento em todas as camadas | Colunar, comprimido, schema embutido; leitura seletiva de colunas/partições |
 | BigQuery (Base dos Dados) | Fonte dos dados públicos | Dados INEP já estruturados e versionados; SQL padrão; free tier cobre o projeto |
-| Jupyter Notebooks | Transformações Silver/Gold e análises | Documentação executável — código, resultado e decisão no mesmo artefato |
+| Jupyter Notebooks | Exploração e entendimento dos dados | Documentação executável — código, resultado e decisão no mesmo artefato; transformações Silver/Gold em produção rodam via `src/silver` e `src/gold` |
 | Flask | Validadores visuais das camadas (`app/`) | Inspeção rápida dos parquets pelo navegador, sem depender de notebook |
 | Git + GitHub (branches + PRs) | Versionamento e colaboração | Evolução rastreável do pipeline por feature branches e Pull Requests |
 | AWS (S3, Kinesis, Lambda, Glue, EventBridge, SNS) | Data lake, streaming e pipeline batch em nuvem | Serverless, pay-per-use, aderente ao volume do projeto (ver seção FinOps) |
@@ -218,7 +221,7 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 
 ```text
 .
-├── app/                           # validadores Flask das camadas (inspeção via navegador)
+├── app/                           # validadores/dashboards Flask (inspeção via navegador)
 ├── data/                          # data lake local (não versionado)
 │   ├── bronze/                    #   brutos por entidade + partições execution_date
 │   ├── silver/                    #   tabelas tratadas particionadas
@@ -235,18 +238,20 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 │   ├── *.tf                       #   S3, Kinesis, Lambda, Glue, Scheduler, SNS
 │   └── README.md                  #   apply, secret GCP, como plugar silver/gold
 ├── notebooks/
-│   ├── 01_download_bronze_bigquery.ipynb
+│   ├── 01_download_bronze_bigquery.ipynb    # espelha src/bronze/download_bigquery.py
 │   ├── 01_entendimento_dados_bronze.ipynb
-│   ├── 02_silver_transformacoes.ipynb
+│   ├── 02_silver_transformacoes.ipynb       # exploração; a Silver "de verdade" roda via src/silver
 │   ├── 03_quality_checks.ipynb
-│   └── 04_gold_analitica.ipynb
+│   └── 04_gold_analitica.ipynb              # exploração; a Gold "de verdade" roda via src/gold
 ├── queries/bronze/                # SQL de extração (Base dos Dados)
 ├── src/
 │   ├── aws/                       # upload do data lake para o S3
 │   ├── bronze/                    # ingestão batch (leitura, gravação, download BigQuery)
+│   ├── silver/                    # transformações Bronze -> Silver (dims, fatos, flags de qualidade)
+│   ├── gold/                      # agregações Silver -> Gold (indicadores, rankings, evolução)
 │   ├── glue/                      # scripts dos jobs Glue (ingestão bronze na nuvem)
 │   └── streaming/                 # producer, consumer local e consumer Lambda
-├── main.py                        # consolidação da camada Bronze
+├── main.py                        # pipeline completo: bronze -> silver -> gold
 ├── requirements.txt
 └── .env.example
 ```
@@ -280,12 +285,11 @@ copy .env.example .env            # e preencha GCP_PROJECT_ID
 # 4. Extração da Base dos Dados (abre o navegador para login Google)
 python -m src.bronze.download_bigquery              # use --somente-dry-run para só estimar custo
 
-# 5. Consolidação Bronze
+# 5. Pipeline completo: Bronze -> Silver -> Gold
 python main.py
-
-# 6. Silver e Gold: executar os notebooks 02 e 04 em ordem
-jupyter notebook
 ```
+
+Os notebooks `02_silver_transformacoes.ipynb` e `04_gold_analitica.ipynb` continuam no repositório para exploração/depuração passo a passo, mas não são mais o caminho de execução — `main.py` já roda as três camadas via `src/silver` e `src/gold`.
 
 ### Pipeline streaming — simulação local (dois terminais, sem AWS)
 
@@ -342,8 +346,8 @@ O projeto segue a abordagem **CRISP-DM** (entendimento do negócio → entendime
 - [x] Monitoramento com CloudWatch (logs e métricas do stream/Lambda/Glue)
 - [x] Alertas de falha de job Glue via EventBridge + SNS (e-mail)
 - [x] Ingestão batch na nuvem (Glue Job `bronze-ingestao` + Glue Workflow + Scheduler)
-- [ ] Carregar a service account GCP no Secrets Manager e habilitar o agendamento
-- [ ] Plugar Silver e Gold como Glue Jobs no workflow (transformações em construção local)
+- [x] Carregar a service account GCP no Secrets Manager e habilitar o agendamento
+- [ ] Plugar Silver (`src/silver`) e Gold (`src/gold`) como Glue Jobs no workflow (hoje `pipeline_jobs` só lista `bronze_ingestao`; local já roda as três camadas via `main.py`)
 - [ ] Atualização do notebook de quality checks para a estrutura atual da Silver
 - [ ] Enriquecimento com fontes externas (Censo Escolar, IBGE) para os casos de uso de IA
 - [ ] Vídeo executivo (até 5 min)
