@@ -2,24 +2,15 @@ from pathlib import Path
 
 import pandas as pd
 
-
-def obter_arquivo_mais_recente(caminho_tabela: Path) -> Path:
-    """
-    Retorna o arquivo parquet mais recente de uma entidade da camada bronze.
-    """
-    arquivos = list(caminho_tabela.rglob("*.parquet"))
-
-    if not arquivos:
-        raise FileNotFoundError(f"Nenhum arquivo parquet encontrado em: {caminho_tabela}")
-
-    return max(arquivos, key=lambda arquivo: arquivo.stat().st_mtime)
+from src.common.particionamento import ler_particoes
 
 
 def ler_entidade_bronze(caminho_tabela: Path) -> pd.DataFrame:
     """
-    Le a versao parquet mais recente de uma entidade bronze.
+    Lê todas as partições de ano do bronze processado de uma entidade.
     """
-    arquivo = obter_arquivo_mais_recente(caminho_tabela)
-    print(f"Lendo bronze: {arquivo}")
+    caminho_processado = caminho_tabela / "processado"
 
-    return pd.read_parquet(arquivo)
+    print(f"Lendo bronze: {caminho_processado}")
+
+    return ler_particoes(caminho_processado)

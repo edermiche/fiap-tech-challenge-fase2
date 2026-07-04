@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.common.particionamento import salvar_particionado_por_ano, ler_tabela_mais_recente
+
 
 SILVER_PATH = Path("data/silver")
 GOLD_PATH = Path("data/gold")
@@ -13,39 +15,24 @@ GOLD_PATH = Path("data/gold")
 EXECUTION_DATE = date.today().isoformat()
 
 
-def localizar_parquet_mais_recente(caminho_tabela: Path) -> Path:
-    """Localiza o arquivo Parquet mais recente em uma pasta."""
-    arquivos = list(caminho_tabela.rglob("*.parquet"))
-    
-    if not arquivos:
-        raise FileNotFoundError(f"Nenhum arquivo Parquet encontrado em: {caminho_tabela}")
-    
-    return max(arquivos, key=lambda arquivo: arquivo.stat().st_mtime)
-
-
 def carregar_silver(nome_tabela: str, colunas: list[str] | None = None) -> pd.DataFrame:
-    """Carrega uma tabela Silver pelo nome."""
+    """Carrega a execução mais recente de uma tabela Silver pelo nome."""
     caminho_tabela = SILVER_PATH / nome_tabela
-    arquivo = localizar_parquet_mais_recente(caminho_tabela)
-    
-    df = pd.read_parquet(arquivo, columns=colunas)
-    
+    df = ler_tabela_mais_recente(caminho_tabela, colunas=colunas)
+
     print(f"[OK] silver.{nome_tabela} carregada: {len(df)} linhas")
-    
+
     return df
 
 
 def salvar_gold(df: pd.DataFrame, nome_tabela: str) -> Path:
-    """Salva uma tabela Gold com particionamento por data."""
+    """Salva uma tabela Gold particionada por execution_date e por ano."""
     output_dir = GOLD_PATH / nome_tabela / f"execution_date={EXECUTION_DATE}"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
-    output_file = output_dir / f"{nome_tabela}.parquet"
-    df.to_parquet(output_file, index=False)
-    
+    salvar_particionado_por_ano(df, output_dir, f"{nome_tabela}.parquet")
+
     print(f"[OK] gold.{nome_tabela} salva: {len(df)} linhas")
-    
-    return output_file
+
+    return output_dir
 
 
 def aplicar_status_meta(df: pd.DataFrame) -> pd.DataFrame:

@@ -102,10 +102,19 @@ A decisão segue o princípio de usar streaming apenas onde a semântica do dado
 
 ## 4. Arquitetura Medalhão
 
+### Particionamento
+
+Nas três camadas, as tabelas com uma coluna de ano são gravadas como `execution_date=<data>/ano=<ano>/arquivo.parquet` (implementado em `src/common/particionamento.py`, compartilhado por bronze/silver/gold):
+
+- **`execution_date`**: preserva o histórico de execuções do pipeline (reprocessamento/versão).
+- **`ano`**: permite leitura seletiva por ano — em motores com partition pruning (Athena/BigQuery), reduz os bytes escaneados por consulta (ver seção de FinOps).
+
+Tabelas sem uma coluna de ano — dimensões e domínios (`dim_uf`, `dim_municipio`, `dim_escola`, `dominio_regiao_uf`) — não recebem a subpartição por ano: são cadastros, não fatos, e fatiar por ano não traria ganho de performance nem faria sentido semântico.
+
 ### 🥉 Bronze — dados brutos
 
 - 7 entidades: `alunos` (3,87 mi de linhas), `municipio`, `uf`, `meta_alfabetizacao_brasil`, `meta_alfabetizacao_uf`, `meta_alfabetizacao_municipio`, `bolsa_familia_municipio`
-- Armazenamento sem transformações significativas, histórico preservado por partição `execution_date=YYYY-MM-DD`
+- Ingestão bruta (BigQuery → parquet) particionada por `execution_date=YYYY-MM-DD`; consolidação processada em `<entidade>/processado/ano=YYYY/`, particionada por ano
 - Eventos de streaming gravados em `alunos_streaming/ano=YYYY/`
 - Metadados técnicos de rastreabilidade em todas as entidades
 
@@ -184,7 +193,7 @@ python app/mapa_brasil_metas.py         # http://127.0.0.1:5004
 
 Decisões que reduzem custo operacional:
 
-- **Parquet + particionamento** (`execution_date`, `ano`): leitura seletiva de partições reduz bytes escaneados — em Athena/BigQuery, custo é proporcional a bytes lidos
+- **Parquet + particionamento** (`execution_date` + `ano`, nas três camadas — ver seção 4): leitura seletiva de partições reduz bytes escaneados — em Athena/BigQuery, custo é proporcional a bytes lidos
 - **Dry run obrigatório antes da extração**: `download_bigquery.py` estima os bytes de cada consulta antes de executar e impõe `maximum_bytes_billed` como trava de custo (a extração completa processa ~260 MB, dentro do free tier de 1 TB/mês do BigQuery — custo real: R$ 0)
 - **Cache de resultados**: re-execuções não repetem consultas (arquivos existentes são pulados)
 - **Serverless por padrão**: Lambda e Kinesis cobram por uso; não há cluster ocioso. A janela de batching de 5s no trigger agrupa eventos e reduz invocações do Lambda
