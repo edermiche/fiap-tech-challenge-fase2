@@ -143,6 +143,20 @@ def padronizar_alunos(df: pd.DataFrame) -> pd.DataFrame:
     return df_base.drop_duplicates().reset_index(drop=True)
 
 
+def padronizar_bolsa_familia_municipio(df: pd.DataFrame) -> pd.DataFrame:
+    df_base = df.copy()
+
+    df_base["ano_competencia"] = df_base["ano_competencia"].astype("Int64")
+    df_base["id_municipio"] = df_base["id_municipio"].apply(padronizar_codigo)
+    df_base["sigla_uf"] = df_base["sigla_uf"].apply(padronizar_sigla_uf)
+
+    df_base = converter_colunas_numericas(
+        df_base, ["total_beneficiarios", "valor_total_pago"]
+    )
+
+    return df_base.drop_duplicates().reset_index(drop=True)
+
+
 def criar_dominio_regiao_uf(data_processamento: date) -> pd.DataFrame:
     df = pd.DataFrame(
         [
@@ -437,6 +451,35 @@ def criar_fato_aluno_alfabetizacao(
     )
 
 
+def criar_fato_bolsa_familia_municipio(
+    df_bolsa_familia_base: pd.DataFrame,
+    data_processamento: date,
+) -> pd.DataFrame:
+    df = df_bolsa_familia_base[
+        [
+            "ano_competencia",
+            "id_municipio",
+            "sigla_uf",
+            "total_beneficiarios",
+            "valor_total_pago",
+        ]
+    ].copy()
+
+    df["flag_total_beneficiarios_valido"] = df["total_beneficiarios"].isna() | (
+        df["total_beneficiarios"] >= 0
+    )
+    df["flag_valor_total_pago_valido"] = df["valor_total_pago"].isna() | (
+        df["valor_total_pago"] >= 0
+    )
+    df["data_processamento_silver"] = data_processamento.isoformat()
+
+    return (
+        df.drop_duplicates()
+        .sort_values(["ano_competencia", "sigla_uf", "id_municipio"])
+        .reset_index(drop=True)
+    )
+
+
 def transformar_bronze_para_silver(
     dados_bronze: dict[str, pd.DataFrame],
     data_processamento: date,
@@ -449,6 +492,9 @@ def transformar_bronze_para_silver(
         dados_bronze["meta_alfabetizacao_municipio"]
     )
     df_alunos_base = padronizar_alunos(dados_bronze["alunos"])
+    df_bolsa_familia_base = padronizar_bolsa_familia_municipio(
+        dados_bronze["bolsa_familia_municipio"]
+    )
 
     df_dominio_regiao_uf = criar_dominio_regiao_uf(data_processamento)
 
@@ -496,6 +542,10 @@ def transformar_bronze_para_silver(
         ),
         "fato_aluno_alfabetizacao": criar_fato_aluno_alfabetizacao(
             df_alunos_base,
+            data_processamento,
+        ),
+        "fato_bolsa_familia_municipio": criar_fato_bolsa_familia_municipio(
+            df_bolsa_familia_base,
             data_processamento,
         ),
     }

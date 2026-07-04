@@ -35,6 +35,7 @@ TABELAS = [
     "meta_alfabetizacao_municipio",
     "municipio",
     "alunos",
+    "bolsa_familia_municipio",
 ]
 
 
@@ -84,12 +85,17 @@ def estimar_consultas(client, tabelas: list[str]) -> pd.DataFrame:
         job_config = bigquery.QueryJobConfig(dry_run=True, use_query_cache=False)
         dry_run_job = client.query(query, job_config=job_config)
 
-        mb_estimados = dry_run_job.total_bytes_processed / 1024 / 1024
+        bytes_processados = dry_run_job.total_bytes_processed
+        mb_estimados = (
+            round(bytes_processados / 1024 / 1024, 2)
+            if bytes_processados is not None
+            else None
+        )
 
         estimativas.append(
             {
                 "tabela": nome_tabela,
-                "mb_estimados": round(mb_estimados, 2),
+                "mb_estimados": mb_estimados,
             }
         )
 
