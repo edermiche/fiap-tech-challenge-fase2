@@ -5,7 +5,6 @@ import pandas as pd
 from src.bronze.config import BRONZE_PATH, ENTIDADES_BRONZE
 from src.bronze.leitores import ler_entidade_bronze
 from src.bronze.gravadores import salvar_entidade_bronze
-from src.bronze.carregador_fundeb import carregar_fundeb_de_downloads
 
 
 def adicionar_metadados_bronze(df: pd.DataFrame, entidade: str) -> pd.DataFrame:
@@ -48,9 +47,6 @@ def processar_camada_bronze() -> None:
     Processa todas as entidades configuradas na camada bronze.
     """
     print("Iniciando processamento da camada bronze")
-
-    # Carregar FUNDEB de downloads/ antes de processar
-    carregar_fundeb_de_downloads()
 
     for entidade in ENTIDADES_BRONZE:
         processar_entidade_bronze(entidade)
