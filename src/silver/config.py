@@ -13,6 +13,7 @@ ENTIDADES_BRONZE_SILVER = [
     "meta_alfabetizacao_municipio",
     "alunos",
     "bolsa_familia_municipio",
+    "fundeb",
 ]
 
 
