@@ -111,8 +111,9 @@ A decisão segue o princípio de usar streaming apenas onde a semântica do dado
 
 ### 🥈 Silver — dados tratados
 
-14 tabelas modeladas em dimensões e fatos ([dicionário completo](docs/dicionario_dados_silver.md)):
+15 tabelas modeladas em domínios, dimensões e fatos ([dicionário completo](docs/dicionario_dados_silver.md)):
 
+- **Domínios**: `dominio_regiao_uf`
 - **Dimensões**: `dim_uf`, `dim_municipio`, `dim_escola`
 - **Fatos de resultado**: `fato_resultado_brasil`, `fato_resultado_uf`, `fato_resultado_municipio`, `fato_resultado_meta_uf`, `fato_resultado_meta_municipio`
 - **Fatos de metas** (colunas → linhas): `fato_meta_anual_brasil`, `fato_meta_anual_uf`, `fato_meta_anual_municipio`
