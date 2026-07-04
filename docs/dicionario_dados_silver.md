@@ -1,278 +1,373 @@
-# Dicionário de Dados - Camada Silver
+# Dicionario de Dados - Camada Silver
 
-**Gerado em:** 2026-06-30 08:09:15
+**Camada:** Silver  
+**Origem fisica:** `data/silver/`  
+**Data de referencia dos arquivos:** `execution_date=2026-07-04`  
+**Total de tabelas:** 17
 
-## Visão geral
+## Visao Geral
 
-Este documento descreve automaticamente as tabelas geradas na camada Silver do pipeline. A camada Silver contém dados tratados, padronizados e organizados para consumo analítico, preservando rastreabilidade com a camada Bronze.
+A camada Silver contem dados tratados, padronizados e organizados para consumo analitico. As tabelas seguem dois padroes principais:
 
-**Total de tabelas Silver identificadas:** 12
+- `dim_*`: dimensoes de referencia, como municipio, UF e escola.
+- `fato_*`: fatos analiticos com medidas, indicadores, metas e flags de qualidade.
 
-## Tabelas identificadas
+## Tabelas
 
-| Tabela | Arquivo mais recente |
+| Tabela | Linhas | Colunas | Descricao |
+|---|---:|---:|---|
+| `silver.dim_escola` | 42.811 | 4 | Cadastro de escolas observadas, vinculadas ao municipio. |
+| `silver.dim_municipio` | 5.550 | 3 | Cadastro de municipios. |
+| `silver.dim_uf` | 25 | 4 | Cadastro de Unidades Federativas. |
+| `silver.dominio_regiao_uf` | 27 | 3 | Dominio de regiao brasileira por UF. |
+| `silver.fato_aluno_alfabetizacao` | 3.867.999 | 20 | Fato granular por aluno, escola, municipio, rede e ano. |
+| `silver.fato_bolsa_familia_municipio` | 11.140 | 8 | Beneficiarios e valores pagos do Bolsa Familia por municipio. |
+| `silver.fato_distribuicao_nivel_municipio` | 112.032 | 8 | Distribuicao dos alunos por nivel de alfabetizacao no municipio. |
+| `silver.fato_distribuicao_nivel_uf` | 675 | 8 | Distribuicao dos alunos por nivel de alfabetizacao na UF. |
+| `silver.fato_fundeb` | 54 | 13 | Valores do FUNDEB por UF e ano. |
+| `silver.fato_meta_anual_brasil` | 21 | 7 | Metas anuais de alfabetizacao para Brasil. |
+| `silver.fato_meta_anual_municipio` | 74.688 | 8 | Metas anuais de alfabetizacao por municipio. |
+| `silver.fato_meta_anual_uf` | 545 | 8 | Metas anuais de alfabetizacao por UF. |
+| `silver.fato_resultado_brasil` | 3 | 8 | Resultado observado de alfabetizacao para Brasil. |
+| `silver.fato_resultado_meta_municipio` | 10.584 | 10 | Resultado de meta por municipio e nivel de alfabetizacao. |
+| `silver.fato_resultado_meta_uf` | 77 | 9 | Resultado de meta por UF. |
+| `silver.fato_resultado_municipio` | 23.995 | 8 | Resultado observado de alfabetizacao por municipio. |
+| `silver.fato_resultado_uf` | 145 | 8 | Resultado observado de alfabetizacao por UF. |
+
+## Campos Recorrentes
+
+| Coluna | Descricao |
 |---|---|
-| `silver.dim_escola` | `../data/silver/dim_escola/execution_date=2026-06-30/dim_escola.parquet` |
-| `silver.dim_municipio` | `../data/silver/dim_municipio/execution_date=2026-06-30/dim_municipio.parquet` |
-| `silver.dim_uf` | `../data/silver/dim_uf/execution_date=2026-06-30/dim_uf.parquet` |
-| `silver.fato_aluno_alfabetizacao` | `../data/silver/fato_aluno_alfabetizacao/execution_date=2026-06-30/fato_aluno_alfabetizacao.parquet` |
-| `silver.fato_distribuicao_nivel_municipio` | `../data/silver/fato_distribuicao_nivel_municipio/execution_date=2026-06-30/fato_distribuicao_nivel_municipio.parquet` |
-| `silver.fato_distribuicao_nivel_uf` | `../data/silver/fato_distribuicao_nivel_uf/execution_date=2026-06-30/fato_distribuicao_nivel_uf.parquet` |
-| `silver.fato_meta_anual_brasil` | `../data/silver/fato_meta_anual_brasil/execution_date=2026-06-30/fato_meta_anual_brasil.parquet` |
-| `silver.fato_meta_anual_uf` | `../data/silver/fato_meta_anual_uf/execution_date=2026-06-30/fato_meta_anual_uf.parquet` |
-| `silver.fato_resultado_brasil` | `../data/silver/fato_resultado_brasil/execution_date=2026-06-30/fato_resultado_brasil.parquet` |
-| `silver.fato_resultado_meta_uf` | `../data/silver/fato_resultado_meta_uf/execution_date=2026-06-30/fato_resultado_meta_uf.parquet` |
-| `silver.fato_resultado_municipio` | `../data/silver/fato_resultado_municipio/execution_date=2026-06-30/fato_resultado_municipio.parquet` |
-| `silver.fato_resultado_uf` | `../data/silver/fato_resultado_uf/execution_date=2026-06-30/fato_resultado_uf.parquet` |
+| `ano` | Ano de referencia do dado observado. |
+| `ano_competencia` | Ano de competencia do beneficio ou pagamento. |
+| `ano_meta` | Ano da meta projetada. |
+| `id_municipio` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | Nome do municipio. |
+| `sigla_uf` | Sigla da Unidade Federativa. |
+| `sigla_uf_nome` | Nome da Unidade Federativa. |
+| `rede` | Rede de ensino ou nivel administrativo. |
+| `serie` | Serie escolar analisada. |
+| `taxa_alfabetizacao` | Percentual de alunos alfabetizados ou taxa consolidada. |
+| `media_portugues` | Media de proficiencia em Lingua Portuguesa. |
+| `meta_alfabetizacao` | Meta percentual de alfabetizacao. |
+| `percentual_participacao` | Percentual de participacao no indicador. |
+| `nivel_agregacao` | Nivel territorial do indicador: Brasil, UF ou Municipio. |
+| `nivel_alfabetizacao` | Nivel de alfabetizacao usado na distribuicao dos alunos. |
+| `data_processamento_silver` | Data em que a tabela foi processada na camada Silver. |
+| `flag_*` | Indicador booleano de validacao ou qualidade do campo relacionado. |
+
+## Regras de Qualidade Aplicadas
+
+A etapa de qualidade da Silver e executada em `src/silver/qualidade.py`, apos a transformacao e antes da gravacao dos arquivos Parquet.
+
+| Regra | Aplicacao |
+|---|---|
+| Padronizacao de nomes | Colunas sao normalizadas para `snake_case`, sem acentos, sem espacos e sem caracteres especiais. |
+| Remocao de duplicidades | Cada tabela usa a chave primaria sugerida como subconjunto de deduplicacao. Quando nao houver regra explicita, a linha completa e usada. |
+| Remocao de nulos criticos | Registros com nulos ou strings vazias nas chaves e campos obrigatorios da tabela sao descartados. |
+| Ajuste de tipagem | Colunas temporais e identificadores recebem tipos consistentes; medidas numericas sao convertidas com `pd.to_numeric`; flags sao convertidas para booleano nullable. |
+| Rastreabilidade | O pipeline imprime a volumetria antes e depois da qualidade para cada tabela Silver. |
+
+## Chaves e Relacionamentos
+
+As chaves abaixo sao definicoes conceituais para documentacao, validacao e consumo analitico. Como a camada Silver esta materializada em arquivos Parquet, essas restricoes nao sao aplicadas fisicamente como em um banco relacional tradicional.
+
+### Chaves Primarias Sugeridas
+
+| Tabela | Chave primaria sugerida | Observacao |
+|---|---|---|
+| `silver.dim_uf` | `sigla_uf` | Identifica uma Unidade Federativa. |
+| `silver.dominio_regiao_uf` | `sigla_uf` | Relaciona cada UF a uma regiao brasileira. |
+| `silver.dim_municipio` | `id_municipio` | Identifica um municipio pelo codigo IBGE. |
+| `silver.dim_escola` | `id_escola` | Identifica uma escola. |
+| `silver.fato_resultado_uf` | `ano`, `sigla_uf`, `serie`, `rede` | Resultado anual por UF, serie e rede. |
+| `silver.fato_resultado_municipio` | `ano`, `id_municipio`, `serie`, `rede` | Resultado anual por municipio, serie e rede. |
+| `silver.fato_resultado_brasil` | `ano`, `rede`, `nivel_agregacao` | Resultado anual consolidado no Brasil. |
+| `silver.fato_meta_anual_uf` | `ano`, `sigla_uf`, `rede`, `ano_meta` | Meta anual por UF e ano alvo. |
+| `silver.fato_meta_anual_municipio` | `ano`, `id_municipio`, `rede`, `ano_meta` | Meta anual por municipio e ano alvo. |
+| `silver.fato_meta_anual_brasil` | `ano`, `rede`, `ano_meta`, `nivel_agregacao` | Meta anual consolidada no Brasil. |
+| `silver.fato_aluno_alfabetizacao` | `ano`, `id_aluno`, `id_escola` | Registro do aluno em uma escola e ano. |
+| `silver.fato_distribuicao_nivel_uf` | `ano`, `sigla_uf`, `serie`, `rede`, `nivel_alfabetizacao` | Distribuicao por nivel de alfabetizacao na UF. |
+| `silver.fato_distribuicao_nivel_municipio` | `ano`, `id_municipio`, `serie`, `rede`, `nivel_alfabetizacao` | Distribuicao por nivel de alfabetizacao no municipio. |
+| `silver.fato_resultado_meta_uf` | `ano`, `sigla_uf`, `rede`, `nivel_agregacao` | Resultado de meta agregado por UF. |
+| `silver.fato_resultado_meta_municipio` | `ano`, `id_municipio`, `rede`, `nivel_alfabetizacao` | Resultado de meta por municipio e nivel. |
+| `silver.fato_bolsa_familia_municipio` | `ano_competencia`, `id_municipio` | Agregado anual do Bolsa Familia por municipio. |
+| `silver.fato_fundeb` | `ano`, `sigla_uf` | Valores do FUNDEB por UF e ano. |
+
+### Chaves Estrangeiras Sugeridas
+
+| Tabela origem | Coluna origem | Tabela destino | Coluna destino | Relacionamento |
+|---|---|---|---|---|
+| `silver.dim_escola` | `id_municipio` | `silver.dim_municipio` | `id_municipio` | Escola pertence a um municipio. |
+| `silver.dim_uf` | `sigla_uf` | `silver.dominio_regiao_uf` | `sigla_uf` | UF pertence a uma regiao brasileira. |
+| `silver.fato_aluno_alfabetizacao` | `id_escola` | `silver.dim_escola` | `id_escola` | Aluno esta vinculado a uma escola. |
+| `silver.fato_aluno_alfabetizacao` | `id_municipio` | `silver.dim_municipio` | `id_municipio` | Aluno esta vinculado a um municipio. |
+| `silver.fato_resultado_municipio` | `id_municipio` | `silver.dim_municipio` | `id_municipio` | Resultado observado por municipio. |
+| `silver.fato_meta_anual_municipio` | `id_municipio` | `silver.dim_municipio` | `id_municipio` | Meta anual por municipio. |
+| `silver.fato_resultado_meta_municipio` | `id_municipio` | `silver.dim_municipio` | `id_municipio` | Resultado de meta por municipio. |
+| `silver.fato_distribuicao_nivel_municipio` | `id_municipio` | `silver.dim_municipio` | `id_municipio` | Distribuicao de niveis por municipio. |
+| `silver.fato_bolsa_familia_municipio` | `id_municipio` | `silver.dim_municipio` | `id_municipio` | Beneficios agregados por municipio. |
+| `silver.fato_resultado_uf` | `sigla_uf` | `silver.dim_uf` | `sigla_uf` | Resultado observado por UF. |
+| `silver.fato_meta_anual_uf` | `sigla_uf` | `silver.dim_uf` | `sigla_uf` | Meta anual por UF. |
+| `silver.fato_resultado_meta_uf` | `sigla_uf` | `silver.dim_uf` | `sigla_uf` | Resultado de meta por UF. |
+| `silver.fato_distribuicao_nivel_uf` | `sigla_uf` | `silver.dim_uf` | `sigla_uf` | Distribuicao de niveis por UF. |
+| `silver.fato_fundeb` | `sigla_uf` | `silver.dim_uf` | `sigla_uf` | Valor do FUNDEB por UF. |
+| `silver.fato_bolsa_familia_municipio` | `sigla_uf` | `silver.dim_uf` | `sigla_uf` | Beneficios agregados por UF. |
 
 ---
 
-## silver.dim_escola
-
-**Descrição:** Dimensão com cadastro básico das escolas observadas na base de alunos, vinculadas ao município.
-
-**Arquivo físico:** `../data/silver/dim_escola/execution_date=2026-06-30/dim_escola.parquet`
-
-**Quantidade de linhas:** 78.408
-
-**Quantidade de colunas:** 4
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `id_escola` | `object` | Chave / Identificador | 0 | 0.0% | 42811 | `60000156` | Código identificador da escola. |
-| `id_municipio` | `object` | Chave / Identificador | 0 | 0.0% | 5548 | `1100015` | Código identificador do município. |
-| `id_municipio_nome` | `object` | Chave / Identificador | 0 | 0.0% | 5279 | `Alta Floresta D'Oeste` | Nome do município. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.dim_municipio
-
-**Descrição:** Dimensão com cadastro dos municípios utilizados nas análises da camada Silver.
-
-**Arquivo físico:** `../data/silver/dim_municipio/execution_date=2026-06-30/dim_municipio.parquet`
-
-**Quantidade de linhas:** 5.550
-
-**Quantidade de colunas:** 3
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `id_municipio` | `object` | Chave / Identificador | 0 | 0.0% | 5550 | `1100015` | Código identificador do município. |
-| `id_municipio_nome` | `object` | Chave / Identificador | 0 | 0.0% | 5281 | `Alta Floresta D'Oeste` | Nome do município. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.dim_uf
-
-**Descrição:** Dimensão com cadastro das Unidades Federativas utilizadas nas análises da camada Silver.
-
-**Arquivo físico:** `../data/silver/dim_uf/execution_date=2026-06-30/dim_uf.parquet`
-
-**Quantidade de linhas:** 25
-
-**Quantidade de colunas:** 3
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `sigla_uf` | `object` | Chave / Identificador | 0 | 0.0% | 25 | `AC` | Sigla da Unidade Federativa. |
-| `sigla_uf_nome` | `object` | Atributo | 0 | 0.0% | 25 | `Acre` | Nome da Unidade Federativa. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.fato_aluno_alfabetizacao
-
-**Descrição:** Tabela fato no nível do aluno, contendo informações de presença, alfabetização, proficiência e peso amostral.
-
-**Arquivo físico:** `../data/silver/fato_aluno_alfabetizacao/execution_date=2026-06-30/fato_aluno_alfabetizacao.parquet`
-
-**Quantidade de linhas:** 3.867.999
-
-**Quantidade de colunas:** 20
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `ano` | `Int64` | Temporal | 0 | 0.0% | 2 | `2023` | Ano de referência do registro. |
-| `id_aluno` | `object` | Chave / Identificador | 0 | 0.0% | 2352328 | `11019569` | Código identificador do aluno. |
-| `id_escola` | `object` | Chave / Identificador | 0 | 0.0% | 42811 | `60000156` | Código identificador da escola. |
-| `id_municipio` | `object` | Chave / Identificador | 0 | 0.0% | 5548 | `1100015` | Código identificador do município. |
-| `serie` | `object` | Atributo | 0 | 0.0% | 1 | `2° ano do Ensino Fundamental` | Série escolar avaliada. |
-| `rede` | `object` | Atributo | 0 | 0.0% | 3 | `Municipal` | Rede de ensino. |
-| `caderno` | `object` | Atributo | 0 | 0.0% | 22 | `8` | Identificação do caderno de avaliação aplicado ao aluno. |
-| `presenca` | `object` | Atributo | 0 | 0.0% | 2 | `Presente` | Indicador de presença do aluno na avaliação. |
-| `preenchimento_caderno` | `object` | Atributo | 0 | 0.0% | 2 | `Prova preenchida` | Indicador de preenchimento do caderno de avaliação. |
-| `alfabetizado` | `object` | Atributo | 0 | 0.0% | 2 | `Não` | Indicador informado sobre a condição de alfabetização do aluno. |
-| `proficiencia` | `float64` | Indicador / Métrica | 513338 | 13.27% | 1299544 | `679.6981` | Valor de proficiência do aluno. |
-| `peso_aluno` | `float64` | Indicador / Métrica | 513338 | 13.27% | 70528 | `4.0` | Peso amostral ou ponderador associado ao aluno. |
-| `flag_id_aluno_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se o identificador do aluno está preenchido. |
-| `flag_id_escola_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se o identificador da escola está preenchido. |
-| `flag_id_municipio_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se o identificador do município está preenchido. |
-| `flag_proficiencia_valida` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se a proficiência é nula ou possui valor maior ou igual a zero. |
-| `flag_peso_aluno_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se o peso do aluno é nulo ou possui valor maior que zero. |
-| `flag_presenca_preenchida` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se o campo de presença está preenchido. |
-| `flag_alfabetizado_preenchido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se o campo alfabetizado está preenchido. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.fato_distribuicao_nivel_municipio
-
-**Descrição:** Tabela fato com a distribuição dos alunos por nível de alfabetização, agregada por município.
-
-**Arquivo físico:** `../data/silver/fato_distribuicao_nivel_municipio/execution_date=2026-06-30/fato_distribuicao_nivel_municipio.parquet`
-
-**Quantidade de linhas:** 215.955
-
-**Quantidade de colunas:** 8
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `ano` | `Int64` | Temporal | 0 | 0.0% | 2 | `2023` | Ano de referência do registro. |
-| `id_municipio` | `object` | Chave / Identificador | 0 | 0.0% | 5550 | `1100015` | Código identificador do município. |
-| `serie` | `object` | Atributo | 0 | 0.0% | 1 | `2° ano do Ensino Fundamental` | Série escolar avaliada. |
-| `rede` | `object` | Atributo | 0 | 0.0% | 4 | `Municipal` | Rede de ensino. |
-| `nivel_alfabetizacao` | `Int64` | Atributo | 0 | 0.0% | 9 | `0` | Nível de alfabetização ou proficiência. |
-| `proporcao_alunos` | `float64` | Indicador / Métrica | 103923 | 48.12% | 4346 | `1.41` | Proporção de alunos enquadrados no nível de alfabetização. |
-| `flag_proporcao_alunos_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se a proporção de alunos está dentro da regra de qualidade definida. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.fato_distribuicao_nivel_uf
-
-**Descrição:** Tabela fato com a distribuição dos alunos por nível de alfabetização, agregada por UF.
-
-**Arquivo físico:** `../data/silver/fato_distribuicao_nivel_uf/execution_date=2026-06-30/fato_distribuicao_nivel_uf.parquet`
-
-**Quantidade de linhas:** 1.305
-
-**Quantidade de colunas:** 8
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `ano` | `Int64` | Temporal | 0 | 0.0% | 2 | `2023` | Ano de referência do registro. |
-| `sigla_uf` | `object` | Chave / Identificador | 0 | 0.0% | 25 | `AL` | Sigla da Unidade Federativa. |
-| `serie` | `object` | Atributo | 0 | 0.0% | 1 | `2° ano do Ensino Fundamental` | Série escolar avaliada. |
-| `rede` | `object` | Atributo | 0 | 0.0% | 4 | `Estadual` | Rede de ensino. |
-| `nivel_alfabetizacao` | `Int64` | Atributo | 0 | 0.0% | 9 | `0` | Nível de alfabetização ou proficiência. |
-| `proporcao_alunos` | `float64` | Indicador / Métrica | 630 | 48.28% | 542 | `3.81` | Proporção de alunos enquadrados no nível de alfabetização. |
-| `flag_proporcao_alunos_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se a proporção de alunos está dentro da regra de qualidade definida. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.fato_meta_anual_brasil
-
-**Descrição:** Tabela fato com metas nacionais de alfabetização transformadas de colunas para linhas.
-
-**Arquivo físico:** `../data/silver/fato_meta_anual_brasil/execution_date=2026-06-30/fato_meta_anual_brasil.parquet`
-
-**Quantidade de linhas:** 21
-
-**Quantidade de colunas:** 7
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `ano` | `Int64` | Temporal | 0 | 0.0% | 3 | `2023` | Ano de referência do registro. |
-| `rede` | `object` | Atributo | 0 | 0.0% | 1 | `Pública` | Rede de ensino. |
-| `ano_meta` | `Int64` | Temporal | 0 | 0.0% | 7 | `2024` | Ano da meta projetada de alfabetização. |
-| `meta_alfabetizacao` | `float64` | Indicador / Métrica | 0 | 0.0% | 13 | `59.9` | Meta de alfabetização prevista para o ano_meta. |
-| `flag_meta_alfabetizacao_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se a meta de alfabetização está dentro da regra de qualidade definida. |
-| `nivel_agregacao` | `object` | Atributo | 0 | 0.0% | 1 | `Brasil` | Nível territorial ou analítico da agregação. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.fato_meta_anual_uf
-
-**Descrição:** Tabela fato com metas de alfabetização por UF transformadas de colunas para linhas.
-
-**Arquivo físico:** `../data/silver/fato_meta_anual_uf/execution_date=2026-06-30/fato_meta_anual_uf.parquet`
-
-**Quantidade de linhas:** 567
-
-**Quantidade de colunas:** 8
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `ano` | `Int64` | Temporal | 0 | 0.0% | 3 | `2023` | Ano de referência do registro. |
-| `sigla_uf` | `object` | Chave / Identificador | 0 | 0.0% | 27 | `AC` | Sigla da Unidade Federativa. |
-| `rede` | `object` | Atributo | 0 | 0.0% | 1 | `Pública` | Rede de ensino. |
-| `ano_meta` | `Int64` | Temporal | 0 | 0.0% | 7 | `2024` | Ano da meta projetada de alfabetização. |
-| `meta_alfabetizacao` | `float64` | Indicador / Métrica | 22 | 3.88% | 147 | `56.9` | Meta de alfabetização prevista para o ano_meta. |
-| `flag_meta_alfabetizacao_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se a meta de alfabetização está dentro da regra de qualidade definida. |
-| `nivel_agregacao` | `object` | Atributo | 0 | 0.0% | 1 | `UF` | Nível territorial ou analítico da agregação. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.fato_resultado_brasil
-
-**Descrição:** Tabela fato com indicadores nacionais de alfabetização por ano e rede.
-
-**Arquivo físico:** `../data/silver/fato_resultado_brasil/execution_date=2026-06-30/fato_resultado_brasil.parquet`
-
-**Quantidade de linhas:** 3
-
-**Quantidade de colunas:** 8
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `ano` | `Int64` | Temporal | 0 | 0.0% | 3 | `2023` | Ano de referência do registro. |
-| `rede` | `object` | Atributo | 0 | 0.0% | 1 | `Pública` | Rede de ensino. |
-| `taxa_alfabetizacao` | `float64` | Indicador / Métrica | 0 | 0.0% | 3 | `55.9` | Percentual ou taxa de alfabetização observada. |
-| `percentual_participacao` | `float64` | Indicador / Métrica | 0 | 0.0% | 3 | `86.0` | Percentual de participação na avaliação. |
-| `flag_taxa_alfabetizacao_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se a taxa de alfabetização está dentro da regra de qualidade definida. |
-| `flag_percentual_participacao_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se o percentual de participação está dentro da regra de qualidade definida. |
-| `nivel_agregacao` | `object` | Atributo | 0 | 0.0% | 1 | `Brasil` | Nível territorial ou analítico da agregação. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.fato_resultado_meta_uf
-
-**Descrição:** Tabela fato com resultados observados de alfabetização por ano, UF e rede, oriundos da base de metas.
-
-**Arquivo físico:** `../data/silver/fato_resultado_meta_uf/execution_date=2026-06-30/fato_resultado_meta_uf.parquet`
-
-**Quantidade de linhas:** 81
-
-**Quantidade de colunas:** 9
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `ano` | `Int64` | Temporal | 0 | 0.0% | 3 | `2023` | Ano de referência do registro. |
-| `sigla_uf` | `object` | Chave / Identificador | 0 | 0.0% | 27 | `AC` | Sigla da Unidade Federativa. |
-| `rede` | `object` | Atributo | 0 | 0.0% | 1 | `Pública` | Rede de ensino. |
-| `taxa_alfabetizacao` | `float64` | Indicador / Métrica | 4 | 4.94% | 69 | `43.88` | Percentual ou taxa de alfabetização observada. |
-| `percentual_participacao` | `float64` | Indicador / Métrica | 4 | 4.94% | 62 | `92.36` | Percentual de participação na avaliação. |
-| `flag_taxa_alfabetizacao_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se a taxa de alfabetização está dentro da regra de qualidade definida. |
-| `flag_percentual_participacao_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se o percentual de participação está dentro da regra de qualidade definida. |
-| `nivel_agregacao` | `object` | Atributo | 0 | 0.0% | 1 | `UF` | Nível territorial ou analítico da agregação. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.fato_resultado_municipio
-
-**Descrição:** Tabela fato com indicadores de alfabetização agregados por ano, município, série e rede.
-
-**Arquivo físico:** `../data/silver/fato_resultado_municipio/execution_date=2026-06-30/fato_resultado_municipio.parquet`
-
-**Quantidade de linhas:** 23.995
-
-**Quantidade de colunas:** 8
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `ano` | `Int64` | Temporal | 0 | 0.0% | 2 | `2023` | Ano de referência do registro. |
-| `id_municipio` | `object` | Chave / Identificador | 0 | 0.0% | 5550 | `1100015` | Código identificador do município. |
-| `serie` | `object` | Atributo | 0 | 0.0% | 1 | `2° ano do Ensino Fundamental` | Série escolar avaliada. |
-| `rede` | `object` | Atributo | 0 | 0.0% | 4 | `Municipal` | Rede de ensino. |
-| `taxa_alfabetizacao` | `float64` | Indicador / Métrica | 0 | 0.0% | 6161 | `64.55` | Percentual ou taxa de alfabetização observada. |
-| `media_portugues` | `float64` | Indicador / Métrica | 0 | 0.0% | 13321 | `758.3304` | Média de desempenho em português. |
-| `flag_taxa_alfabetizacao_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se a taxa de alfabetização está dentro da regra de qualidade definida. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
-
-## silver.fato_resultado_uf
-
-**Descrição:** Tabela fato com indicadores de alfabetização agregados por ano, UF, série e rede.
-
-**Arquivo físico:** `../data/silver/fato_resultado_uf/execution_date=2026-06-30/fato_resultado_uf.parquet`
-
-**Quantidade de linhas:** 145
-
-**Quantidade de colunas:** 8
-
-| Coluna | Tipo | Categoria | Nulos | % Nulos | Valores distintos | Exemplo | Descrição |
-|---|---|---|---:|---:|---:|---|---|
-| `ano` | `Int64` | Temporal | 0 | 0.0% | 2 | `2023` | Ano de referência do registro. |
-| `sigla_uf` | `object` | Chave / Identificador | 0 | 0.0% | 25 | `AL` | Sigla da Unidade Federativa. |
-| `serie` | `object` | Atributo | 0 | 0.0% | 1 | `2° ano do Ensino Fundamental` | Série escolar avaliada. |
-| `rede` | `object` | Atributo | 0 | 0.0% | 4 | `Estadual` | Rede de ensino. |
-| `taxa_alfabetizacao` | `float64` | Indicador / Métrica | 0 | 0.0% | 139 | `38.65` | Percentual ou taxa de alfabetização observada. |
-| `media_portugues` | `float64` | Indicador / Métrica | 0 | 0.0% | 140 | `724.7993` | Média de desempenho em português. |
-| `flag_taxa_alfabetizacao_valido` | `bool` | Flag de qualidade | 0 | 0.0% | 1 | `True` | Flag que indica se a taxa de alfabetização está dentro da regra de qualidade definida. |
-| `data_processamento_silver` | `object` | Temporal | 0 | 0.0% | 1 | `2026-06-30` | Data em que o registro foi processado na camada Silver. |
+## `silver.dim_escola`
+
+Cadastro de escolas observadas na base de alunos, vinculadas ao municipio.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `id_escola` | `object` | Codigo identificador da escola. |
+| `id_municipio` | `object` | Codigo IBGE do municipio da escola. |
+| `id_municipio_nome` | `object` | Nome do municipio da escola. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.dim_municipio`
+
+Cadastro de municipios usados nas analises.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | `object` | Nome do municipio. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.dim_uf`
+
+Cadastro de Unidades Federativas.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `sigla_uf_nome` | `object` | Nome da Unidade Federativa. |
+| `regiao_brasil` | `object` | Regiao brasileira da UF. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.dominio_regiao_uf`
+
+Dominio auxiliar de regiao brasileira por UF.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `regiao_brasil` | `object` | Regiao brasileira da UF. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_aluno_alfabetizacao`
+
+Fato granular com informacoes de alfabetizacao por aluno.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `id_aluno` | `object` | Identificador do aluno. |
+| `id_escola` | `object` | Identificador da escola. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `serie` | `object` | Serie escolar. |
+| `rede` | `object` | Rede de ensino. |
+| `caderno` | `object` | Tipo ou identificador do caderno aplicado. |
+| `presenca` | `object` | Indicador de presenca do aluno. |
+| `preenchimento_caderno` | `object` | Situacao de preenchimento do caderno. |
+| `alfabetizado` | `object` | Classificacao de alfabetizacao do aluno. |
+| `proficiencia` | `float64` | Proficiencia do aluno. |
+| `peso_aluno` | `float64` | Peso amostral ou peso do aluno no indicador. |
+| `flag_id_aluno_valido` | `bool` | Indica se o identificador do aluno e valido. |
+| `flag_id_escola_valido` | `bool` | Indica se o identificador da escola e valido. |
+| `flag_id_municipio_valido` | `bool` | Indica se o identificador do municipio e valido. |
+| `flag_proficiencia_valida` | `bool` | Indica se a proficiencia e valida. |
+| `flag_peso_aluno_valido` | `bool` | Indica se o peso do aluno e valido. |
+| `flag_presenca_preenchida` | `bool` | Indica se a presenca foi preenchida. |
+| `flag_alfabetizado_preenchido` | `bool` | Indica se a classificacao de alfabetizacao foi preenchida. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_bolsa_familia_municipio`
+
+Fato com dados agregados do Bolsa Familia por municipio.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano_competencia` | `Int64` | Ano de competencia do beneficio. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `sigla_uf` | `object` | Sigla da UF do municipio. |
+| `total_beneficiarios` | `Int64` | Total de beneficiarios no municipio. |
+| `valor_total_pago` | `float64` | Valor total pago no municipio. |
+| `flag_total_beneficiarios_valido` | `boolean` | Indica se o total de beneficiarios e valido. |
+| `flag_valor_total_pago_valido` | `bool` | Indica se o valor total pago e valido. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_distribuicao_nivel_municipio`
+
+Distribuicao de alunos por nivel de alfabetizacao no municipio.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `serie` | `object` | Serie escolar. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_alfabetizacao` | `Int64` | Nivel de alfabetizacao. |
+| `proporcao_alunos` | `float64` | Proporcao de alunos no nivel. |
+| `flag_proporcao_alunos_valido` | `bool` | Indica se a proporcao esta entre 0 e 100 ou nula. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_distribuicao_nivel_uf`
+
+Distribuicao de alunos por nivel de alfabetizacao na UF.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `sigla_uf` | `object` | Sigla da UF. |
+| `serie` | `object` | Serie escolar. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_alfabetizacao` | `Int64` | Nivel de alfabetizacao. |
+| `proporcao_alunos` | `float64` | Proporcao de alunos no nivel. |
+| `flag_proporcao_alunos_valido` | `bool` | Indica se a proporcao esta entre 0 e 100 ou nula. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_fundeb`
+
+Fato com dados do FUNDEB por UF e ano.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `ranking_ano` | `Int64` | Posicao da UF no ranking anual. |
+| `estado` | `object` | Nome do estado. |
+| `sigla_uf` | `object` | Sigla da UF. |
+| `total_estado_df` | `float64` | Total associado ao estado ou Distrito Federal. |
+| `total_municipios` | `float64` | Total associado aos municipios. |
+| `total_fundeb` | `float64` | Total do FUNDEB. |
+| `percentual_brasil` | `float64` | Participacao percentual da UF no total Brasil. |
+| `flag_total_estado_df_valido` | `bool` | Indica se o total do estado/DF e valido. |
+| `flag_total_municipios_valido` | `bool` | Indica se o total dos municipios e valido. |
+| `flag_total_fundeb_valido` | `bool` | Indica se o total do FUNDEB e valido. |
+| `flag_percentual_brasil_valido` | `bool` | Indica se o percentual Brasil esta entre 0 e 100 ou nulo. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_meta_anual_brasil`
+
+Metas anuais de alfabetizacao em nivel Brasil.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano base da medicao. |
+| `rede` | `object` | Rede de ensino. |
+| `ano_meta` | `Int64` | Ano alvo da meta. |
+| `meta_alfabetizacao` | `float64` | Meta percentual de alfabetizacao. |
+| `flag_meta_alfabetizacao_valido` | `bool` | Indica se a meta esta entre 0 e 100 ou nula. |
+| `nivel_agregacao` | `object` | Nivel territorial da meta. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_meta_anual_municipio`
+
+Metas anuais de alfabetizacao por municipio.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano base da medicao. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `rede` | `object` | Rede de ensino. |
+| `ano_meta` | `Int64` | Ano alvo da meta. |
+| `meta_alfabetizacao` | `float64` | Meta percentual de alfabetizacao. |
+| `flag_meta_alfabetizacao_valido` | `bool` | Indica se a meta esta entre 0 e 100 ou nula. |
+| `nivel_agregacao` | `object` | Nivel territorial da meta. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_meta_anual_uf`
+
+Metas anuais de alfabetizacao por UF.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano base da medicao. |
+| `sigla_uf` | `object` | Sigla da UF. |
+| `rede` | `object` | Rede de ensino. |
+| `ano_meta` | `Int64` | Ano alvo da meta. |
+| `meta_alfabetizacao` | `float64` | Meta percentual de alfabetizacao. |
+| `flag_meta_alfabetizacao_valido` | `bool` | Indica se a meta esta entre 0 e 100 ou nula. |
+| `nivel_agregacao` | `object` | Nivel territorial da meta. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_resultado_brasil`
+
+Resultado observado de alfabetizacao em nivel Brasil.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `rede` | `object` | Rede de ensino. |
+| `taxa_alfabetizacao` | `float64` | Taxa de alfabetizacao observada. |
+| `percentual_participacao` | `float64` | Percentual de participacao. |
+| `flag_taxa_alfabetizacao_valido` | `bool` | Indica se a taxa esta entre 0 e 100 ou nula. |
+| `flag_percentual_participacao_valido` | `bool` | Indica se a participacao esta entre 0 e 100 ou nula. |
+| `nivel_agregacao` | `object` | Nivel territorial do resultado. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_resultado_meta_municipio`
+
+Resultado observado por municipio, rede e nivel de alfabetizacao.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `rede` | `object` | Rede de ensino. |
+| `taxa_alfabetizacao` | `float64` | Taxa de alfabetizacao observada. |
+| `nivel_alfabetizacao` | `Int64` | Nivel de alfabetizacao. |
+| `percentual_participacao` | `float64` | Percentual de participacao. |
+| `flag_taxa_alfabetizacao_valido` | `bool` | Indica se a taxa esta entre 0 e 100 ou nula. |
+| `flag_percentual_participacao_valido` | `bool` | Indica se a participacao esta entre 0 e 100 ou nula. |
+| `nivel_agregacao` | `object` | Nivel territorial do resultado. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_resultado_meta_uf`
+
+Resultado observado por UF e rede.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `sigla_uf` | `object` | Sigla da UF. |
+| `rede` | `object` | Rede de ensino. |
+| `taxa_alfabetizacao` | `float64` | Taxa de alfabetizacao observada. |
+| `percentual_participacao` | `float64` | Percentual de participacao. |
+| `flag_taxa_alfabetizacao_valido` | `bool` | Indica se a taxa esta entre 0 e 100 ou nula. |
+| `flag_percentual_participacao_valido` | `bool` | Indica se a participacao esta entre 0 e 100 ou nula. |
+| `nivel_agregacao` | `object` | Nivel territorial do resultado. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_resultado_municipio`
+
+Resultado observado de alfabetizacao por municipio.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `serie` | `object` | Serie escolar. |
+| `rede` | `object` | Rede de ensino. |
+| `taxa_alfabetizacao` | `float64` | Taxa de alfabetizacao observada. |
+| `media_portugues` | `float64` | Media de proficiencia em Lingua Portuguesa. |
+| `flag_taxa_alfabetizacao_valido` | `bool` | Indica se a taxa esta entre 0 e 100 ou nula. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
+
+## `silver.fato_resultado_uf`
+
+Resultado observado de alfabetizacao por UF.
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `sigla_uf` | `object` | Sigla da UF. |
+| `serie` | `object` | Serie escolar. |
+| `rede` | `object` | Rede de ensino. |
+| `taxa_alfabetizacao` | `float64` | Taxa de alfabetizacao observada. |
+| `media_portugues` | `float64` | Media de proficiencia em Lingua Portuguesa. |
+| `flag_taxa_alfabetizacao_valido` | `bool` | Indica se a taxa esta entre 0 e 100 ou nula. |
+| `data_processamento_silver` | `object` | Data de processamento na camada Silver. |
