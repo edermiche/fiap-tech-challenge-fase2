@@ -6,6 +6,7 @@ import pandas as pd
 from src.silver.config import BRONZE_PATH, ENTIDADES_BRONZE_SILVER
 from src.silver.gravadores import salvar_entidade_silver
 from src.silver.leitores import ler_entidade_bronze
+from src.silver.qualidade import aplicar_qualidade_silver
 from src.silver.transformacoes import transformar_bronze_para_silver
 
 
@@ -44,6 +45,7 @@ def processar_camada_silver(data_processamento: date | None = None) -> dict[str,
 
     dados_bronze = carregar_dados_bronze()
     tabelas_silver = transformar_bronze_para_silver(dados_bronze, data_processamento)
+    tabelas_silver = aplicar_qualidade_silver(tabelas_silver)
     arquivos_salvos = salvar_tabelas_silver(tabelas_silver, data_processamento)
 
     print("Processamento da camada silver finalizado")

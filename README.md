@@ -122,7 +122,7 @@ Tabelas sem uma coluna de ano — dimensões e domínios (`dim_uf`, `dim_municip
 
 ### 🥈 Silver — dados tratados
 
-16 tabelas modeladas em dimensões e fatos ([dicionário completo](docs/dicionario_dados_silver.md)):
+17 tabelas modeladas em dimensões e fatos ([dicionário completo](docs/dicionario_dados_silver.md), [catálogo por camada](docs/catalogo_tabelas_camadas.md)):
 
 - **Dimensões**: `dim_uf`, `dim_municipio`, `dim_escola`
 - **Fatos de resultado**: `fato_resultado_brasil`, `fato_resultado_uf`, `fato_resultado_municipio`, `fato_resultado_meta_uf`, `fato_resultado_meta_municipio`
@@ -238,6 +238,7 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 │   └── streaming/                 #   fila de micro-lotes (simulação do stream)
 ├── docs/
 │   ├── crisp_dm.md                # abordagem CRISP-DM do projeto
+│   ├── catalogo_tabelas_camadas.md# descrição das tabelas Bronze, Silver e Gold
 │   ├── dicionario_dados_bronze.md # perfil técnico das tabelas Bronze
 │   ├── dicionario_dados_silver.md # dicionário das tabelas Silver
 │   ├── dicionario_dados_gold.md   # dicionário das 7 tabelas Gold
