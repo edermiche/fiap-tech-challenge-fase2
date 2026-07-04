@@ -5,7 +5,6 @@ import pandas as pd
 from src.bronze.config import BRONZE_PATH, ENTIDADES_BRONZE
 from src.bronze.leitores import ler_entidade_bronze
 from src.bronze.gravadores import salvar_entidade_bronze
-from src.bronze.carregador_fundeb import carregar_fundeb_de_downloads
 
 
 def adicionar_metadados_bronze(df: pd.DataFrame, entidade: str) -> pd.DataFrame:
@@ -30,17 +29,18 @@ def processar_entidade_bronze(entidade: str) -> None:
     Processa uma entidade da camada bronze.
     """
     caminho_entidade = BRONZE_PATH / entidade
-    caminho_saida = BRONZE_PATH / entidade / f"{entidade}_processado.parquet"
+    caminho_processado = caminho_entidade / "processado"
+    nome_arquivo = f"{entidade}_processado.parquet"
 
     print(f"Processando entidade: {entidade}")
 
     df = ler_entidade_bronze(caminho_entidade)
     df = adicionar_metadados_bronze(df, entidade)
 
-    salvar_entidade_bronze(df, caminho_saida)
+    salvar_entidade_bronze(df, caminho_processado, nome_arquivo)
 
     print(f"Entidade processada: {entidade}")
-    print(f"Arquivo salvo em: {caminho_saida}")
+    print(f"Arquivo salvo em: {caminho_processado} (particionado por ano)")
 
 
 def processar_camada_bronze() -> None:
@@ -48,9 +48,6 @@ def processar_camada_bronze() -> None:
     Processa todas as entidades configuradas na camada bronze.
     """
     print("Iniciando processamento da camada bronze")
-
-    # Carregar FUNDEB de downloads/ antes de processar
-    carregar_fundeb_de_downloads()
 
     for entidade in ENTIDADES_BRONZE:
         processar_entidade_bronze(entidade)

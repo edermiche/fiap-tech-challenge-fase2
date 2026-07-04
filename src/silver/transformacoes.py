@@ -157,21 +157,6 @@ def padronizar_bolsa_familia_municipio(df: pd.DataFrame) -> pd.DataFrame:
     return df_base.drop_duplicates().reset_index(drop=True)
 
 
-def padronizar_fundeb(df: pd.DataFrame) -> pd.DataFrame:
-    df_base = df.copy()
-
-    df_base["ano"] = df_base["ano"].astype("Int64")
-    df_base["ranking_ano"] = df_base["ranking_ano"].astype("Int64")
-    df_base["estado"] = df_base["estado"].apply(padronizar_texto)
-    df_base["uf"] = df_base["uf"].apply(padronizar_sigla_uf)
-
-    df_base = converter_colunas_numericas(
-        df_base, ["total_estado_df", "total_municipios", "total_fundeb", "percentual_brasil"]
-    )
-
-    return df_base.drop_duplicates().reset_index(drop=True)
-
-
 def criar_dominio_regiao_uf(data_processamento: date) -> pd.DataFrame:
     df = pd.DataFrame(
         [
@@ -495,46 +480,6 @@ def criar_fato_bolsa_familia_municipio(
     )
 
 
-def criar_fato_fundeb(
-    df_fundeb_base: pd.DataFrame,
-    data_processamento: date,
-) -> pd.DataFrame:
-    df = df_fundeb_base[
-        [
-            "ano",
-            "ranking_ano",
-            "estado",
-            "uf",
-            "total_estado_df",
-            "total_municipios",
-            "total_fundeb",
-            "percentual_brasil",
-        ]
-    ].copy()
-
-    df.rename(columns={"uf": "sigla_uf"}, inplace=True)
-
-    df["flag_total_estado_df_valido"] = df["total_estado_df"].isna() | (
-        df["total_estado_df"] >= 0
-    )
-    df["flag_total_municipios_valido"] = df["total_municipios"].isna() | (
-        df["total_municipios"] >= 0
-    )
-    df["flag_total_fundeb_valido"] = df["total_fundeb"].isna() | (
-        df["total_fundeb"] >= 0
-    )
-    df["flag_percentual_brasil_valido"] = df["percentual_brasil"].isna() | (
-        df["percentual_brasil"].between(0, 100)
-    )
-    df["data_processamento_silver"] = data_processamento.isoformat()
-
-    return (
-        df.drop_duplicates()
-        .sort_values(["ano", "sigla_uf"])
-        .reset_index(drop=True)
-    )
-
-
 def transformar_bronze_para_silver(
     dados_bronze: dict[str, pd.DataFrame],
     data_processamento: date,
@@ -550,7 +495,6 @@ def transformar_bronze_para_silver(
     df_bolsa_familia_base = padronizar_bolsa_familia_municipio(
         dados_bronze["bolsa_familia_municipio"]
     )
-    df_fundeb_base = padronizar_fundeb(dados_bronze["fundeb"])
 
     df_dominio_regiao_uf = criar_dominio_regiao_uf(data_processamento)
 
@@ -602,10 +546,6 @@ def transformar_bronze_para_silver(
         ),
         "fato_bolsa_familia_municipio": criar_fato_bolsa_familia_municipio(
             df_bolsa_familia_base,
-            data_processamento,
-        ),
-        "fato_fundeb": criar_fato_fundeb(
-            df_fundeb_base,
             data_processamento,
         ),
     }

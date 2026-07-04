@@ -7,7 +7,6 @@ BRONZE_PATH = Path("data/bronze")
 ENTIDADES_BRONZE = [
     "alunos",
     "bolsa_familia_municipio",
-    "fundeb",
     "meta_alfabetizacao_brasil",
     "meta_alfabetizacao_municipio",
     "meta_alfabetizacao_uf",

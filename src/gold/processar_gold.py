@@ -6,6 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from src.common.particionamento import salvar_particionado_por_ano, ler_tabela_mais_recente
+
 
 SILVER_PATH = Path("data/silver")
 GOLD_PATH = Path("data/gold")
@@ -13,39 +15,24 @@ GOLD_PATH = Path("data/gold")
 EXECUTION_DATE = date.today().isoformat()
 
 
-def localizar_parquet_mais_recente(caminho_tabela: Path) -> Path:
-    """Localiza o arquivo Parquet mais recente em uma pasta."""
-    arquivos = list(caminho_tabela.rglob("*.parquet"))
-    
-    if not arquivos:
-        raise FileNotFoundError(f"Nenhum arquivo Parquet encontrado em: {caminho_tabela}")
-    
-    return max(arquivos, key=lambda arquivo: arquivo.stat().st_mtime)
-
-
 def carregar_silver(nome_tabela: str, colunas: list[str] | None = None) -> pd.DataFrame:
-    """Carrega uma tabela Silver pelo nome."""
+    """Carrega a execução mais recente de uma tabela Silver pelo nome."""
     caminho_tabela = SILVER_PATH / nome_tabela
-    arquivo = localizar_parquet_mais_recente(caminho_tabela)
-    
-    df = pd.read_parquet(arquivo, columns=colunas)
-    
+    df = ler_tabela_mais_recente(caminho_tabela, colunas=colunas)
+
     print(f"[OK] silver.{nome_tabela} carregada: {len(df)} linhas")
-    
+
     return df
 
 
 def salvar_gold(df: pd.DataFrame, nome_tabela: str) -> Path:
-    """Salva uma tabela Gold com particionamento por data."""
+    """Salva uma tabela Gold particionada por execution_date e por ano."""
     output_dir = GOLD_PATH / nome_tabela / f"execution_date={EXECUTION_DATE}"
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
-    output_file = output_dir / f"{nome_tabela}.parquet"
-    df.to_parquet(output_file, index=False)
-    
+    salvar_particionado_por_ano(df, output_dir, f"{nome_tabela}.parquet")
+
     print(f"[OK] gold.{nome_tabela} salva: {len(df)} linhas")
-    
-    return output_file
+
+    return output_dir
 
 
 def aplicar_status_meta(df: pd.DataFrame) -> pd.DataFrame:
@@ -78,14 +65,20 @@ def processar_indicador_meta_brasil(
         df_fato_resultado_brasil
         .merge(
             df_fato_meta_anual_brasil,
-            on=["ano", "rede"],
+            on=["ano", "rede", "nivel_agregacao"],
             how="inner",
             suffixes=("_resultado", "_meta")
         )
     )
-    
+
+    # Compara o resultado observado no ano apenas com a meta do mesmo ano;
+    # sem esse filtro, cada linha de resultado se multiplica por uma linha
+    # por ano_meta (2024..2030), comparando o mesmo resultado contra metas
+    # de anos diferentes.
+    df = df[df["ano"] == df["ano_meta"]].copy()
+
     df = aplicar_status_meta(df)
-    
+
     return (
         df
         .sort_values(["ano", "rede"])
@@ -94,27 +87,24 @@ def processar_indicador_meta_brasil(
 
 
 def processar_indicador_meta_uf(
-    df_fato_resultado_uf: pd.DataFrame,
+    df_fato_resultado_meta_uf: pd.DataFrame,
     df_fato_meta_anual_uf: pd.DataFrame,
 ) -> pd.DataFrame:
     """Processa indicador de meta por UF."""
-    df_resultado = df_fato_resultado_uf[
-        df_fato_resultado_uf["rede"] == "Pública (Estadual e Municipal)"
-    ].copy()
-    df_resultado["rede"] = "Pública"
-
     df = (
-        df_resultado
+        df_fato_resultado_meta_uf
         .merge(
             df_fato_meta_anual_uf,
-            on=["ano", "sigla_uf", "rede"],
+            on=["ano", "sigla_uf", "rede", "nivel_agregacao"],
             how="inner",
             suffixes=("_resultado", "_meta")
         )
     )
-    
+
+    df = df[df["ano"] == df["ano_meta"]].copy()
+
     df = aplicar_status_meta(df)
-    
+
     return (
         df
         .sort_values(["ano", "sigla_uf", "rede"])
@@ -144,22 +134,24 @@ def processar_ranking_uf_prioritaria(
 
 
 def processar_indicador_meta_municipio(
-    df_fato_resultado_municipio: pd.DataFrame,
+    df_fato_resultado_meta_municipio: pd.DataFrame,
     df_fato_meta_anual_municipio: pd.DataFrame,
 ) -> pd.DataFrame:
     """Processa indicador de meta por município."""
     df = (
-        df_fato_resultado_municipio
+        df_fato_resultado_meta_municipio
         .merge(
             df_fato_meta_anual_municipio,
-            on=["ano", "id_municipio", "rede"],
+            on=["ano", "id_municipio", "rede", "nivel_agregacao"],
             how="inner",
             suffixes=("_resultado", "_meta")
         )
     )
-    
+
+    df = df[df["ano"] == df["ano_meta"]].copy()
+
     df = aplicar_status_meta(df)
-    
+
     return (
         df
         .sort_values(["ano", "id_municipio", "rede"])
@@ -263,8 +255,8 @@ def processar_camada_gold() -> None:
     # Carregar Silver
     print("\n[CARREGAMENTO] Lendo tabelas Silver...")
     df_fato_resultado_brasil = carregar_silver("fato_resultado_brasil")
-    df_fato_resultado_uf = carregar_silver("fato_resultado_uf")
-    df_fato_resultado_municipio = carregar_silver("fato_resultado_municipio")
+    df_fato_resultado_meta_uf = carregar_silver("fato_resultado_meta_uf")
+    df_fato_resultado_meta_municipio = carregar_silver("fato_resultado_meta_municipio")
     df_fato_meta_anual_brasil = carregar_silver("fato_meta_anual_brasil")
     df_fato_meta_anual_uf = carregar_silver("fato_meta_anual_uf")
     df_fato_meta_anual_municipio = carregar_silver("fato_meta_anual_municipio")
@@ -279,7 +271,7 @@ def processar_camada_gold() -> None:
     salvar_gold(df_indicador_meta_brasil, "indicador_meta_brasil")
     
     df_indicador_meta_uf = processar_indicador_meta_uf(
-        df_fato_resultado_uf,
+        df_fato_resultado_meta_uf,
         df_fato_meta_anual_uf,
     )
     salvar_gold(df_indicador_meta_uf, "indicador_meta_uf")
@@ -290,7 +282,7 @@ def processar_camada_gold() -> None:
     salvar_gold(df_ranking_uf_prioritaria, "ranking_uf_prioritaria")
     
     df_indicador_meta_municipio = processar_indicador_meta_municipio(
-        df_fato_resultado_municipio,
+        df_fato_resultado_meta_municipio,
         df_fato_meta_anual_municipio,
     )
     salvar_gold(df_indicador_meta_municipio, "indicador_meta_municipio")
