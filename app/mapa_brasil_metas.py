@@ -9,17 +9,19 @@ app = Flask(__name__)
 
 BASE_PATH = Path(__file__).resolve().parents[1]
 GOLD_PATH = BASE_PATH / "data" / "gold"
+SILVER_PATH = BASE_PATH / "data" / "silver"
 GEOJSON_PATH = BASE_PATH / "app" / "brasil_estados.geojson"
 GEOJSON_MUNICIPIOS_PATH = BASE_PATH / "app" / "brasil_municipios.geojson"
 TABELA_UF = "indicador_meta_uf"
 TABELA_MUNICIPIO = "indicador_meta_municipio"
 TABELAS_CIDADE = [
     "indicador_meta_municipio",
+    "indicador_meta_uf",
+    "indicador_meta_brasil",
     "ranking_municipio_prioritario",
-    "feature_municipio_ano",
-    "vulnerabilidade_municipio",
-    "contagem_alunos_territorio",
-    "taxa_alfabetizacao_por_aluno",
+    "ranking_uf_prioritaria",
+    "resumo_status_meta",
+    "evolucao_alfabetizacao",
 ]
 
 CODIGO_UF_POR_SIGLA = {
@@ -50,6 +52,10 @@ CODIGO_UF_POR_SIGLA = {
     "MT": "51",
     "GO": "52",
     "DF": "53",
+}
+SIGLA_UF_POR_CODIGO = {
+    codigo_uf: sigla_uf
+    for sigla_uf, codigo_uf in CODIGO_UF_POR_SIGLA.items()
 }
 
 CORES_STATUS = {
@@ -93,7 +99,56 @@ def carregar_indicador_municipio() -> pd.DataFrame:
 
         frames.append(df_particao)
 
-    return pd.concat(frames, ignore_index=True)
+    df = pd.concat(frames, ignore_index=True)
+
+    if "sigla_uf" not in df.columns and "id_municipio" in df.columns:
+        df["sigla_uf"] = (
+            df["id_municipio"]
+            .astype(str)
+            .str[:2]
+            .map(SIGLA_UF_POR_CODIGO)
+        )
+
+    if "id_municipio_nome" not in df.columns and "id_municipio" in df.columns:
+        df["id_municipio_nome"] = df["id_municipio"].astype(str)
+
+    df = enriquecer_nomes_municipio(df)
+
+    return df
+
+
+def carregar_dim_municipio() -> pd.DataFrame:
+    caminho_tabela = SILVER_PATH / "dim_municipio"
+    arquivos = sorted(caminho_tabela.rglob("*.parquet"))
+
+    if not arquivos:
+        return pd.DataFrame(columns=["id_municipio", "id_municipio_nome"])
+
+    arquivo = max(arquivos, key=lambda caminho: caminho.stat().st_mtime)
+    return pd.read_parquet(arquivo, columns=["id_municipio", "id_municipio_nome"])
+
+
+def enriquecer_nomes_municipio(df: pd.DataFrame) -> pd.DataFrame:
+    if "id_municipio" not in df.columns:
+        return df
+
+    dim_municipio = carregar_dim_municipio()
+    if dim_municipio.empty:
+        return df
+
+    df_enriquecido = df.copy()
+    df_enriquecido["id_municipio"] = df_enriquecido["id_municipio"].astype(str)
+    dim_municipio = dim_municipio.copy()
+    dim_municipio["id_municipio"] = dim_municipio["id_municipio"].astype(str)
+
+    if "id_municipio_nome" in df_enriquecido.columns:
+        df_enriquecido = df_enriquecido.drop(columns=["id_municipio_nome"])
+
+    return df_enriquecido.merge(
+        dim_municipio.drop_duplicates("id_municipio"),
+        on="id_municipio",
+        how="left",
+    )
 
 
 def carregar_gold_particionado(nome_tabela: str) -> pd.DataFrame:
@@ -112,7 +167,20 @@ def carregar_gold_particionado(nome_tabela: str) -> pd.DataFrame:
 
         frames.append(df_particao)
 
-    return pd.concat(frames, ignore_index=True)
+    df = pd.concat(frames, ignore_index=True)
+
+    if "id_municipio" in df.columns:
+        df = enriquecer_nomes_municipio(df)
+
+    if "sigla_uf" not in df.columns and "id_municipio" in df.columns:
+        df["sigla_uf"] = (
+            df["id_municipio"]
+            .astype(str)
+            .str[:2]
+            .map(SIGLA_UF_POR_CODIGO)
+        )
+
+    return df
 
 
 def status_normalizado(status: str | None) -> str:
@@ -393,9 +461,21 @@ def formatar_valor_tabela(valor):
     return valor
 
 
-def montar_secao_cidade(nome_tabela: str, id_municipio: str, ano: str, rede: str) -> dict[str, str]:
+def montar_secao_cidade(
+    nome_tabela: str,
+    id_municipio: str,
+    sigla_uf: str,
+    ano: str,
+    rede: str,
+) -> dict[str, str]:
     df = carregar_gold_particionado(nome_tabela)
-    df = df[df["id_municipio"].astype(str) == str(id_municipio)].copy()
+
+    if "id_municipio" in df.columns:
+        df = df[df["id_municipio"].astype(str) == str(id_municipio)].copy()
+    elif "sigla_uf" in df.columns and sigla_uf:
+        df = df[df["sigla_uf"].astype(str) == str(sigla_uf)].copy()
+    else:
+        df = df.copy()
 
     if ano != "todos" and "ano" in df.columns and ano in df["ano"].astype(str).unique():
         df = df[df["ano"].astype(str) == ano]
@@ -412,12 +492,25 @@ def montar_secao_cidade(nome_tabela: str, id_municipio: str, ano: str, rede: str
     }
 
 
-def montar_secoes_cidade(id_municipio: str, ano: str, rede: str) -> list[dict[str, str]]:
+def montar_secoes_cidade(
+    id_municipio: str,
+    sigla_uf: str,
+    ano: str,
+    rede: str,
+) -> list[dict[str, str]]:
     secoes = []
 
     for nome_tabela in TABELAS_CIDADE:
         try:
-            secoes.append(montar_secao_cidade(nome_tabela, id_municipio, ano, rede))
+            secoes.append(
+                montar_secao_cidade(
+                    nome_tabela,
+                    id_municipio,
+                    sigla_uf,
+                    ano,
+                    rede,
+                )
+            )
         except FileNotFoundError:
             continue
 
@@ -1612,7 +1705,7 @@ def cidade(id_municipio: str):
             sigla_uf=sigla_uf,
             ano=ano,
             rede=rede,
-            secoes=montar_secoes_cidade(id_municipio, ano, rede),
+            secoes=montar_secoes_cidade(id_municipio, sigla_uf, ano, rede),
             erro=None,
         )
     except Exception as erro:

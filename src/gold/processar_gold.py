@@ -98,8 +98,13 @@ def processar_indicador_meta_uf(
     df_fato_meta_anual_uf: pd.DataFrame,
 ) -> pd.DataFrame:
     """Processa indicador de meta por UF."""
+    df_resultado = df_fato_resultado_uf[
+        df_fato_resultado_uf["rede"] == "Pública (Estadual e Municipal)"
+    ].copy()
+    df_resultado["rede"] = "Pública"
+
     df = (
-        df_fato_resultado_uf
+        df_resultado
         .merge(
             df_fato_meta_anual_uf,
             on=["ano", "sigla_uf", "rede"],
