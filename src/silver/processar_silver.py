@@ -1,0 +1,51 @@
+from datetime import date
+from pathlib import Path
+
+import pandas as pd
+
+from src.silver.config import BRONZE_PATH, ENTIDADES_BRONZE_SILVER
+from src.silver.gravadores import salvar_entidade_silver
+from src.silver.leitores import ler_entidade_bronze
+from src.silver.transformacoes import transformar_bronze_para_silver
+
+
+def carregar_dados_bronze() -> dict[str, pd.DataFrame]:
+    dados_bronze = {}
+
+    for entidade in ENTIDADES_BRONZE_SILVER:
+        dados_bronze[entidade] = ler_entidade_bronze(BRONZE_PATH / entidade)
+
+    return dados_bronze
+
+
+def salvar_tabelas_silver(
+    tabelas_silver: dict[str, pd.DataFrame],
+    data_processamento: date,
+) -> dict[str, Path]:
+    arquivos_salvos = {}
+
+    for nome_tabela, df in tabelas_silver.items():
+        arquivos_salvos[nome_tabela] = salvar_entidade_silver(
+            df,
+            nome_tabela,
+            data_processamento,
+        )
+
+    return arquivos_salvos
+
+
+def processar_camada_silver(data_processamento: date | None = None) -> dict[str, Path]:
+    """
+    Processa as entidades bronze e materializa as tabelas da camada silver.
+    """
+    data_processamento = data_processamento or date.today()
+
+    print("Iniciando processamento da camada silver")
+
+    dados_bronze = carregar_dados_bronze()
+    tabelas_silver = transformar_bronze_para_silver(dados_bronze, data_processamento)
+    arquivos_salvos = salvar_tabelas_silver(tabelas_silver, data_processamento)
+
+    print("Processamento da camada silver finalizado")
+
+    return arquivos_salvos
