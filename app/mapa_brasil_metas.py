@@ -15,6 +15,7 @@ GEOJSON_MUNICIPIOS_PATH = BASE_PATH / "app" / "brasil_municipios.geojson"
 TABELA_UF = "indicador_meta_uf"
 TABELA_MUNICIPIO = "indicador_meta_municipio"
 TABELAS_CIDADE = [
+    "indicador_alfabetizacao_municipio",
     "indicador_meta_municipio",
     "indicador_meta_uf",
     "indicador_meta_brasil",

@@ -6,21 +6,438 @@
 
 A camada Gold contém tabelas analíticas finais derivadas da camada Silver, criadas para responder às perguntas de negócio relacionadas à alfabetização no Brasil.
 
-**Total de tabelas Gold identificadas:** 7
+**Total de tabelas Gold identificadas:** 24
 
 ## Tabelas identificadas
 
 | Tabela | Arquivo mais recente |
 |---|---|
+| `gold.comparacao_meta_resultado_brasil` | `../data/gold/comparacao_meta_resultado_brasil/execution_date=2026-07-05/` |
+| `gold.comparacao_meta_resultado_municipio` | `../data/gold/comparacao_meta_resultado_municipio/execution_date=2026-07-05/` |
+| `gold.comparacao_meta_resultado_uf` | `../data/gold/comparacao_meta_resultado_uf/execution_date=2026-07-05/` |
+| `gold.desigualdade_territorial_uf` | `../data/gold/desigualdade_territorial_uf/execution_date=2026-07-05/` |
+| `gold.distribuicao_desempenho_aluno` | `../data/gold/distribuicao_desempenho_aluno/execution_date=2026-07-05/` |
 | `gold.evolucao_alfabetizacao` | `../data/gold/evolucao_alfabetizacao/execution_date=2026-07-02/evolucao_alfabetizacao.parquet` |
+| `gold.evolucao_meta_resultado_municipio` | `../data/gold/evolucao_meta_resultado_municipio/execution_date=2026-07-05/` |
+| `gold.evolucao_meta_resultado_uf` | `../data/gold/evolucao_meta_resultado_uf/execution_date=2026-07-05/` |
+| `gold.indicador_alfabetizacao_municipio` | `../data/gold/indicador_alfabetizacao_municipio/execution_date=2026-07-05/ano=2024/indicador_alfabetizacao_municipio.parquet` |
+| `gold.indicador_desempenho_aluno` | `../data/gold/indicador_desempenho_aluno/execution_date=2026-07-05/` |
 | `gold.indicador_meta_brasil` | `../data/gold/indicador_meta_brasil/execution_date=2026-07-02/indicador_meta_brasil.parquet` |
 | `gold.indicador_meta_municipio` | `../data/gold/indicador_meta_municipio/execution_date=2026-07-02/indicador_meta_municipio.parquet` |
+| `gold.indicador_meta_regiao` | `../data/gold/indicador_meta_regiao/execution_date=2026-07-05/` |
 | `gold.indicador_meta_uf` | `../data/gold/indicador_meta_uf/execution_date=2026-07-02/indicador_meta_uf.parquet` |
+| `gold.indicador_presenca_avaliacao` | `../data/gold/indicador_presenca_avaliacao/execution_date=2026-07-05/` |
+| `gold.mapa_calor_territorial` | `../data/gold/mapa_calor_territorial/execution_date=2026-07-05/` |
+| `gold.meta_uf_bolsa_familia` | `../data/gold/meta_uf_bolsa_familia/execution_date=2026-07-05/` |
+| `gold.meta_uf_fundeb` | `../data/gold/meta_uf_fundeb/execution_date=2026-07-05/` |
+| `gold.perfil_aluno_alfabetizacao` | `../data/gold/perfil_aluno_alfabetizacao/execution_date=2026-07-05/` |
+| `gold.ranking_escolas_prioritarias` | `../data/gold/ranking_escolas_prioritarias/execution_date=2026-07-05/` |
 | `gold.ranking_municipio_prioritario` | `../data/gold/ranking_municipio_prioritario/execution_date=2026-07-02/ranking_municipio_prioritario.parquet` |
+| `gold.ranking_territorial_prioridade` | `../data/gold/ranking_territorial_prioridade/execution_date=2026-07-05/` |
 | `gold.ranking_uf_prioritaria` | `../data/gold/ranking_uf_prioritaria/execution_date=2026-07-02/ranking_uf_prioritaria.parquet` |
 | `gold.resumo_status_meta` | `../data/gold/resumo_status_meta/execution_date=2026-07-02/resumo_status_meta.parquet` |
 
 ---
+
+## gold.comparacao_meta_resultado_brasil
+
+**Descricao:** Comparacao direta entre resultado observado e meta de alfabetizacao no nivel Brasil.
+
+**Chave sugerida:** `ano`, `ano_meta`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia do resultado observado. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_agregacao` | `object` | Nivel territorial da analise. |
+| `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
+| `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
+| `flag_meta_atingida` | `bool` | Indica se a meta foi atingida. |
+| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.comparacao_meta_resultado_uf
+
+**Descricao:** Comparacao direta entre resultado observado e meta de alfabetizacao por UF.
+
+**Chave sugerida:** `ano`, `ano_meta`, `sigla_uf`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia do resultado observado. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_agregacao` | `object` | Nivel territorial da analise. |
+| `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
+| `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
+| `flag_meta_atingida` | `bool` | Indica se a meta foi atingida. |
+| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.comparacao_meta_resultado_municipio
+
+**Descricao:** Comparacao direta entre resultado observado e meta de alfabetizacao por municipio.
+
+**Chave sugerida:** `ano`, `ano_meta`, `id_municipio`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia do resultado observado. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | `object` | Nome do municipio. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_agregacao` | `object` | Nivel territorial da analise. |
+| `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
+| `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
+| `flag_meta_atingida` | `bool` | Indica se a meta foi atingida. |
+| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.evolucao_meta_resultado_uf
+
+**Descricao:** Serie temporal de resultado observado, meta, distancia da meta e variacao anual por UF.
+
+**Chave sugerida:** `ano`, `ano_meta`, `sigla_uf`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia do resultado observado. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_agregacao` | `object` | Nivel territorial da analise. |
+| `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
+| `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
+| `variacao_resultado_ano_anterior` | `float64` | Variacao do resultado observado em relacao ao ano anterior da mesma UF e rede. |
+| `variacao_meta_ano_anterior` | `float64` | Variacao da meta em relacao ao ano anterior da mesma UF e rede. |
+| `flag_meta_atingida` | `bool` | Indica se a meta foi atingida. |
+| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.evolucao_meta_resultado_municipio
+
+**Descricao:** Serie temporal de resultado observado, meta, distancia da meta e variacao anual por municipio.
+
+**Chave sugerida:** `ano`, `ano_meta`, `id_municipio`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia do resultado observado. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | `object` | Nome do municipio. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_agregacao` | `object` | Nivel territorial da analise. |
+| `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
+| `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
+| `variacao_resultado_ano_anterior` | `float64` | Variacao do resultado observado em relacao ao ano anterior do mesmo municipio e rede. |
+| `variacao_meta_ano_anterior` | `float64` | Variacao da meta em relacao ao ano anterior do mesmo municipio e rede. |
+| `flag_meta_atingida` | `bool` | Indica se a meta foi atingida. |
+| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.indicador_meta_regiao
+
+**Descricao:** Indicador territorial agregado por regiao brasileira, com resultado medio, meta media e status regional.
+
+**Chave sugerida:** `ano`, `ano_meta`, `regiao_brasil`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `regiao_brasil` | `object` | Regiao brasileira. |
+| `rede` | `object` | Rede de ensino. |
+| `resultado_alfabetizacao_medio` | `float64` | Media regional do resultado observado. |
+| `meta_alfabetizacao_media` | `float64` | Media regional da meta de alfabetizacao. |
+| `distancia_media_meta` | `float64` | Media da distancia entre resultado e meta. |
+| `total_ufs` | `int64` | Quantidade de UFs consideradas na regiao. |
+| `total_meta_atingida` | `int64` | Quantidade de UFs com meta atingida. |
+| `total_abaixo_meta` | `int64` | Quantidade de UFs abaixo da meta. |
+| `percentual_meta_atingida` | `float64` | Percentual de UFs com meta atingida. |
+| `status_regiao` | `object` | Status consolidado da regiao. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.perfil_aluno_alfabetizacao
+
+**Descricao:** Perfil agregado dos microdados por serie, rede, presenca e status de alfabetizacao.
+
+**Chave sugerida:** `ano`, `serie`, `rede`, `presenca`, `alfabetizado`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `serie` | `object` | Serie escolar. |
+| `rede` | `object` | Rede de ensino. |
+| `presenca` | `object` | Indicador de presenca do aluno. |
+| `alfabetizado` | `object` | Classificacao de alfabetizacao. |
+| `total_alunos` | `int64` | Quantidade de alunos no grupo. |
+| `media_proficiencia` | `float64` | Media de proficiencia no grupo. |
+| `percentual_alunos` | `float64` | Percentual do grupo dentro da serie/rede/ano. |
+| `total_presentes` | `int64` | Total de alunos presentes. |
+| `total_ausentes` | `int64` | Total de alunos ausentes. |
+| `percentual_presentes` | `float64` | Percentual de presentes no grupo. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.indicador_presenca_avaliacao
+
+**Descricao:** Indicadores de presenca e ausencia na avaliacao por municipio, UF, rede e serie.
+
+**Chave sugerida:** `ano`, `id_municipio`, `rede`, `serie`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `regiao_brasil` | `object` | Regiao brasileira. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | `object` | Nome do municipio. |
+| `rede` | `object` | Rede de ensino. |
+| `serie` | `object` | Serie escolar. |
+| `total_alunos` | `int64` | Total de alunos avaliados/cadastrados no grupo. |
+| `total_presentes` | `int64` | Total de alunos presentes. |
+| `total_ausentes` | `int64` | Total de alunos ausentes. |
+| `media_proficiencia_presentes` | `float64` | Media de proficiencia dos alunos presentes. |
+| `percentual_presenca` | `float64` | Percentual de presenca. |
+| `percentual_ausencia` | `float64` | Percentual de ausencia. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.indicador_desempenho_aluno
+
+**Descricao:** Indicadores agregados de desempenho dos alunos por municipio, UF, rede e serie.
+
+**Chave sugerida:** `ano`, `id_municipio`, `rede`, `serie`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `regiao_brasil` | `object` | Regiao brasileira. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | `object` | Nome do municipio. |
+| `rede` | `object` | Rede de ensino. |
+| `serie` | `object` | Serie escolar. |
+| `total_alunos` | `int64` | Total de alunos no grupo. |
+| `total_presentes` | `int64` | Total de alunos presentes. |
+| `total_alfabetizados` | `int64` | Total de alunos alfabetizados. |
+| `total_nao_alfabetizados` | `int64` | Total de alunos nao alfabetizados. |
+| `media_proficiencia` | `float64` | Media de proficiencia. |
+| `mediana_proficiencia` | `float64` | Mediana de proficiencia. |
+| `menor_proficiencia` | `float64` | Menor proficiencia observada. |
+| `maior_proficiencia` | `float64` | Maior proficiencia observada. |
+| `desvio_padrao_proficiencia` | `float64` | Desvio padrao da proficiencia. |
+| `percentual_presenca` | `float64` | Percentual de presenca. |
+| `percentual_alfabetizado` | `float64` | Percentual de alunos alfabetizados. |
+| `percentual_nao_alfabetizado` | `float64` | Percentual de alunos nao alfabetizados. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.distribuicao_desempenho_aluno
+
+**Descricao:** Distribuicao dos alunos por faixa de proficiencia e status de alfabetizacao.
+
+**Chave sugerida:** `ano`, `sigla_uf`, `rede`, `serie`, `faixa_proficiencia`, `alfabetizado`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `regiao_brasil` | `object` | Regiao brasileira. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `rede` | `object` | Rede de ensino. |
+| `serie` | `object` | Serie escolar. |
+| `faixa_proficiencia` | `object` | Faixa de proficiencia. |
+| `alfabetizado` | `object` | Classificacao de alfabetizacao. |
+| `total_alunos` | `int64` | Total de alunos na faixa. |
+| `media_proficiencia` | `float64` | Media de proficiencia na faixa. |
+| `percentual_alunos` | `float64` | Percentual de alunos na faixa dentro do grupo. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.ranking_escolas_prioritarias
+
+**Descricao:** Ranking de escolas prioritarias por percentual de alunos nao alfabetizados.
+
+**Chave sugerida:** `ano`, `id_escola`, `rede`, `serie`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `regiao_brasil` | `object` | Regiao brasileira. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | `object` | Nome do municipio. |
+| `id_escola` | `object` | Codigo identificador da escola. |
+| `rede` | `object` | Rede de ensino. |
+| `serie` | `object` | Serie escolar. |
+| `total_alunos` | `int64` | Total de alunos da escola no grupo. |
+| `total_presentes` | `int64` | Total de alunos presentes. |
+| `total_alfabetizados` | `int64` | Total de alunos alfabetizados. |
+| `total_nao_alfabetizados` | `int64` | Total de alunos nao alfabetizados. |
+| `percentual_nao_alfabetizado` | `float64` | Percentual de alunos nao alfabetizados. |
+| `percentual_presenca` | `float64` | Percentual de presenca. |
+| `media_proficiencia` | `float64` | Media de proficiencia da escola. |
+| `ranking_nacional` | `int64` | Posicao no ranking nacional. |
+| `ranking_uf` | `int64` | Posicao no ranking da UF. |
+| `ranking_municipio` | `int64` | Posicao no ranking do municipio. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.ranking_territorial_prioridade
+
+**Descricao:** Ranking de municipios abaixo da meta, com posicoes no Brasil, na regiao e dentro da UF.
+
+**Chave sugerida:** `ano`, `ano_meta`, `id_municipio`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `regiao_brasil` | `object` | Regiao brasileira. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | `object` | Nome do municipio. |
+| `taxa_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista. |
+| `distancia_meta` | `float64` | Distancia entre resultado e meta. |
+| `ranking_nacional` | `int64` | Posicao no ranking nacional de prioridade. |
+| `ranking_regiao` | `int64` | Posicao no ranking regional de prioridade. |
+| `ranking_uf` | `int64` | Posicao no ranking da UF. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.desigualdade_territorial_uf
+
+**Descricao:** Medidas de desigualdade dos resultados municipais dentro de cada UF.
+
+**Chave sugerida:** `ano`, `ano_meta`, `sigla_uf`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `regiao_brasil` | `object` | Regiao brasileira. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `resultado_medio_uf` | `float64` | Media dos resultados municipais da UF. |
+| `menor_resultado_municipal` | `float64` | Menor resultado municipal da UF. |
+| `maior_resultado_municipal` | `float64` | Maior resultado municipal da UF. |
+| `amplitude_resultado` | `float64` | Diferenca entre maior e menor resultado municipal. |
+| `desvio_padrao_resultado` | `float64` | Dispersao dos resultados municipais. |
+| `qtd_municipios` | `int64` | Quantidade de municipios considerados. |
+| `qtd_municipios_abaixo_meta` | `int64` | Quantidade de municipios abaixo da meta. |
+| `percentual_municipios_abaixo_meta` | `float64` | Percentual de municipios abaixo da meta. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.mapa_calor_territorial
+
+**Descricao:** Base municipal classificada por faixa de risco territorial conforme distancia ate a meta.
+
+**Chave sugerida:** `ano`, `ano_meta`, `id_municipio`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `regiao_brasil` | `object` | Regiao brasileira. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | `object` | Nome do municipio. |
+| `taxa_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista. |
+| `distancia_meta` | `float64` | Distancia entre resultado e meta. |
+| `status_meta` | `object` | Status de cumprimento da meta. |
+| `classe_risco` | `object` | Faixa de risco territorial. |
+| `cor_mapa` | `object` | Cor sugerida para mapa de calor. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.indicador_alfabetizacao_municipio
+
+**Descricao:** Tabela analitica municipal enriquecida para acompanhar alfabetizacao, meta, status, nome do municipio, UF, indicadores do Bolsa Familia e rankings de prioridade.
+
+**Arquivo fisico:** `../data/gold/indicador_alfabetizacao_municipio/execution_date=2026-07-05/ano=2024/indicador_alfabetizacao_municipio.parquet`
+
+**Quantidade de linhas:** 5232
+
+**Quantidade de colunas:** 19
+
+**Chave sugerida:** `ano`, `id_municipio`, `rede`, `ano_meta`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia do resultado observado. |
+| `id_municipio` | `object` | Codigo IBGE do municipio. |
+| `id_municipio_nome` | `object` | Nome do municipio. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_agregacao` | `object` | Nivel territorial da analise. |
+| `taxa_alfabetizacao` | `float64` | Taxa de alfabetizacao observada. |
+| `nivel_alfabetizacao` | `Int64` | Nivel de alfabetizacao observado. |
+| `percentual_participacao` | `float64` | Percentual de participacao na avaliacao. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
+| `distancia_meta` | `float64` | Diferenca entre taxa observada e meta de alfabetizacao. |
+| `flag_meta_atingida` | `bool` | Indica se a meta foi atingida. |
+| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
+| `total_beneficiarios_bolsa_familia` | `Int64` | Total anual de beneficiarios do Bolsa Familia no municipio. |
+| `valor_total_bolsa_familia` | `float64` | Valor anual pago pelo Bolsa Familia no municipio. |
+| `ranking_prioridade_uf` | `Int64` | Posicao de prioridade do municipio dentro da UF, quando esta abaixo da meta. |
+| `ranking_prioridade_brasil` | `Int64` | Posicao de prioridade do municipio no Brasil, quando esta abaixo da meta. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.meta_uf_fundeb
+
+**Descricao:** Verificacao estadual que cruza meta de alfabetizacao com valores recebidos do FUNDEB.
+
+**Chave sugerida:** `ano`, `ano_meta`, `sigla_uf`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia do resultado observado e do repasse FUNDEB. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `sigla_uf_nome` | `object` | Nome da Unidade Federativa. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_agregacao` | `object` | Nivel territorial da analise. |
+| `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
+| `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
+| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
+| `total_fundeb` | `float64` | Valor total do FUNDEB recebido pela UF. |
+| `total_estado_df` | `float64` | Parcela do FUNDEB referente ao estado ou Distrito Federal. |
+| `total_municipios` | `float64` | Parcela do FUNDEB referente aos municipios da UF. |
+| `percentual_brasil` | `float64` | Participacao da UF no total Brasil do FUNDEB. |
+| `ranking_fundeb_ano` | `Int64` | Ranking anual da UF por valor total do FUNDEB. |
+| `ranking_meta_ano` | `Int64` | Ranking anual da UF por meta de alfabetizacao. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
+
+## gold.meta_uf_bolsa_familia
+
+**Descricao:** Verificacao estadual que cruza meta de alfabetizacao com total de beneficiarios e valores pagos pelo Bolsa Familia.
+
+**Chave sugerida:** `ano`, `ano_meta`, `sigla_uf`, `rede`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `ano` | `Int64` | Ano de referencia do resultado observado e do Bolsa Familia. |
+| `ano_meta` | `Int64` | Ano da meta comparada. |
+| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
+| `rede` | `object` | Rede de ensino. |
+| `nivel_agregacao` | `object` | Nivel territorial da analise. |
+| `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
+| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
+| `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
+| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
+| `total_beneficiarios_bolsa_familia` | `Int64` | Total anual de beneficiarios do Bolsa Familia na UF. |
+| `valor_total_bolsa_familia` | `float64` | Valor anual pago pelo Bolsa Familia na UF. |
+| `total_municipios_com_bolsa_familia` | `Int64` | Quantidade de municipios da UF com dados do Bolsa Familia. |
+| `ranking_beneficiarios_ano` | `Int64` | Ranking anual da UF por total de beneficiarios. |
+| `ranking_meta_ano` | `Int64` | Ranking anual da UF por meta de alfabetizacao. |
+| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
 
 ## gold.evolucao_alfabetizacao
 

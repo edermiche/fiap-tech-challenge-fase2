@@ -135,11 +135,19 @@ Transformações aplicadas: padronização de textos e códigos identificadores,
 
 ### 🥇 Gold — camada analítica
 
-7 datasets prontos para consumo ([dicionário completo](docs/dicionario_dados_gold.md)):
+24 datasets prontos para consumo ([dicionário completo](docs/dicionario_dados_gold.md)):
 
 | Tabela | Pergunta que responde |
 |---|---|
+| `comparacao_meta_resultado_brasil` / `_uf` / `_municipio` | Comparação direta entre resultado observado e meta, com gráfico no catálogo Gold |
+| `evolucao_meta_resultado_uf` / `_municipio` | Evolução temporal de resultado, meta e distância da meta com dashboard gráfico |
+| `indicador_meta_regiao` / `desigualdade_territorial_uf` | Dados territoriais por região e UF, incluindo desigualdade interna entre municípios |
 | `indicador_meta_brasil` / `_uf` / `_municipio` | Resultado observado vs. meta do mesmo ano, com status de atingimento |
+| `indicador_alfabetizacao_municipio` | Visao municipal enriquecida com nome do municipio, UF, Bolsa Familia e rankings de prioridade |
+| `perfil_aluno_alfabetizacao` / `indicador_presenca_avaliacao` / `ranking_escolas_prioritarias` | Microdados educacionais agregados: perfil, presença e priorização escolar |
+| `indicador_desempenho_aluno` / `distribuicao_desempenho_aluno` | Indicadores de proficiência, alfabetização e faixas de desempenho dos alunos |
+| `ranking_territorial_prioridade` / `mapa_calor_territorial` | Priorização e classificação de risco territorial para municípios |
+| `meta_uf_fundeb` / `meta_uf_bolsa_familia` | Verificações externas: verba FUNDEB ou beneficiários do Bolsa Família x meta estadual |
 | `evolucao_alfabetizacao` | Evolução temporal do indicador por nível de agregação |
 | `ranking_uf_prioritaria` / `ranking_municipio_prioritario` | Priorização por distância à meta — insumo direto para política pública |
 | `resumo_status_meta` | Consolidação de atingimento por ano e agregação |
@@ -241,7 +249,7 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 │   ├── catalogo_tabelas_camadas.md# descrição das tabelas Bronze, Silver e Gold
 │   ├── dicionario_dados_bronze.md # perfil técnico das tabelas Bronze
 │   ├── dicionario_dados_silver.md # dicionário das tabelas Silver
-│   ├── dicionario_dados_gold.md   # dicionário das 7 tabelas Gold
+│   ├── dicionario_dados_gold.md   # dicionário das 24 tabelas Gold
 │   ├── evidencias/                # prints da execução em nuvem (S3, Kinesis, Lambda)
 │   └── insumos_modelagem_bronze.md# chaves, relacionamentos e backlog
 ├── infra/                         # IaC Terraform de toda a infra AWS
