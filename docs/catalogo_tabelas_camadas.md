@@ -8,7 +8,7 @@ Este documento descreve o nome e a finalidade das tabelas materializadas nas cam
 |---|---:|---|
 | Bronze | 8 | Dados brutos ingeridos e padronizados com metadados tecnicos. |
 | Silver | 17 | Dados tratados, tipados, deduplicados, com regras de qualidade e modelados em dimensoes e fatos. |
-| Gold | 7 | Indicadores analiticos finais para dashboard, rankings e acompanhamento de metas. |
+| Gold | 24 | Indicadores analiticos finais para dashboard, rankings, microdados educacionais, dados territoriais, verificacoes externas e acompanhamento de metas. |
 
 ---
 
@@ -61,11 +61,28 @@ A camada Gold consolida os indicadores finais usados em analises e visualizacoes
 
 | Tabela | Nome descritivo | Descricao |
 |---|---|---|
+| `gold.comparacao_meta_resultado_brasil` | Comparacao metas x resultados Brasil | Compara resultado observado e meta de alfabetizacao no nivel Brasil para visualizacao em grafico. |
+| `gold.comparacao_meta_resultado_municipio` | Comparacao metas x resultados municipio | Compara resultado observado e meta de alfabetizacao por municipio, com nome do municipio, UF e status. |
+| `gold.comparacao_meta_resultado_uf` | Comparacao metas x resultados UF | Compara resultado observado e meta de alfabetizacao por UF para visualizacao em grafico. |
+| `gold.desigualdade_territorial_uf` | Desigualdade territorial por UF | Mede dispersao dos resultados municipais dentro de cada UF, com amplitude, desvio padrao e percentual abaixo da meta. |
 | `gold.evolucao_alfabetizacao` | Evolucao da alfabetizacao | Serie temporal consolidada com taxa media de alfabetizacao, participacao e variacoes anuais. |
+| `gold.evolucao_meta_resultado_municipio` | Evolucao metas x resultados municipio | Serie temporal de resultado, meta, distancia da meta e variacao anual por municipio. |
+| `gold.evolucao_meta_resultado_uf` | Evolucao metas x resultados UF | Serie temporal de resultado, meta, distancia da meta e variacao anual por UF. |
+| `gold.distribuicao_desempenho_aluno` | Distribuicao de desempenho dos alunos | Distribui alunos por faixa de proficiencia, alfabetizacao, UF, rede e serie. |
+| `gold.indicador_alfabetizacao_municipio` | Indicador de alfabetizacao por municipio | Visao municipal enriquecida com resultado, meta, status, nome do municipio, UF, Bolsa Familia e rankings de prioridade. |
+| `gold.indicador_desempenho_aluno` | Indicadores de desempenho dos alunos | Agrega proficiencia, alfabetizacao e presenca por municipio, UF, rede e serie. |
 | `gold.indicador_meta_brasil` | Indicador de meta Brasil | Compara resultado observado e meta de alfabetizacao no nivel Brasil, calculando distancia da meta e status. |
 | `gold.indicador_meta_municipio` | Indicador de meta municipio | Compara resultado observado e meta de alfabetizacao por municipio, calculando distancia da meta e status. |
+| `gold.indicador_meta_regiao` | Indicador de meta por regiao | Consolida resultado, meta, distancia e status por regiao brasileira. |
 | `gold.indicador_meta_uf` | Indicador de meta UF | Compara resultado observado e meta de alfabetizacao por UF, calculando distancia da meta e status. |
+| `gold.indicador_presenca_avaliacao` | Indicador de presenca na avaliacao | Resume presenca e ausencia por municipio, UF, rede e serie. |
+| `gold.mapa_calor_territorial` | Mapa de calor territorial | Classifica municipios por faixa de risco conforme distancia ate a meta. |
+| `gold.meta_uf_bolsa_familia` | Meta por UF x Bolsa Familia | Cruza meta estadual de alfabetizacao com total de beneficiarios e valor pago pelo Bolsa Familia. |
+| `gold.meta_uf_fundeb` | Meta por UF x FUNDEB | Cruza meta estadual de alfabetizacao com valor recebido do FUNDEB e ranking anual de verba. |
+| `gold.perfil_aluno_alfabetizacao` | Perfil aluno alfabetizacao | Distribui alunos por presenca, status de alfabetizacao, serie e rede. |
+| `gold.ranking_escolas_prioritarias` | Ranking de escolas prioritarias | Ordena escolas por maior percentual de alunos nao alfabetizados. |
 | `gold.ranking_municipio_prioritario` | Ranking de municipios prioritarios | Lista municipios abaixo da meta, ordenados pela maior distancia negativa em relacao ao objetivo. |
+| `gold.ranking_territorial_prioridade` | Ranking territorial de prioridade | Ordena municipios abaixo da meta com rankings nacional, regional e por UF. |
 | `gold.ranking_uf_prioritaria` | Ranking de UFs prioritarias | Lista UFs abaixo da meta, ordenadas pela maior distancia negativa em relacao ao objetivo. |
 | `gold.resumo_status_meta` | Resumo de status das metas | Agregado por ano, nivel territorial e status da meta, usado para visao executiva de cumprimento das metas. |
 

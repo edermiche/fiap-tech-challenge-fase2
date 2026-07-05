@@ -83,7 +83,13 @@ def ler_particoes(
     if not caminho_base.exists():
         raise FileNotFoundError(f"Pasta não encontrada: {caminho_base}")
 
-    arquivos = sorted(caminho_base.rglob("*.parquet"))
+    arquivos_particionados = sorted(
+        arquivo
+        for pasta_ano in caminho_base.glob("ano=*")
+        if pasta_ano.is_dir()
+        for arquivo in pasta_ano.glob("*.parquet")
+    )
+    arquivos = arquivos_particionados or sorted(caminho_base.glob("*.parquet"))
 
     if not arquivos:
         raise FileNotFoundError(f"Nenhum arquivo parquet encontrado em: {caminho_base}")
