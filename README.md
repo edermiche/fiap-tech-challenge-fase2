@@ -170,11 +170,13 @@ Aplicações Flask para inspecionar os arquivos parquet gerados em cada camada p
 - `app/medallion_validator.py`: navegação entre Bronze, Silver e Gold em uma única interface (lista tabelas, resume linhas/colunas, agrupa por eixo e métrica, gera gráfico de barras, consulta a distribuição de `status_meta` e mostra amostras)
 - `app/dashboard_alfabetizacao.py`: dashboard analítico da Gold (Brasil/UF/Município) com filtros de ano, rede e UF
 - `app/mapa_brasil_metas.py`: mapa do Brasil (SVG) colorido por status da meta, com drill-down por estado e por município
+- `app/dashboard_simulacao_2030.py`: dashboard de cenários municipais até 2030, com filtros por ano simulado, UF, risco e município
 
 ```bash
 python app/medallion_validator.py       # http://127.0.0.1:5000
 python app/dashboard_alfabetizacao.py   # http://127.0.0.1:5003
 python app/mapa_brasil_metas.py         # http://127.0.0.1:5004
+python app/dashboard_simulacao_2030.py  # http://127.0.0.1:5005
 ```
 
 ---
@@ -216,6 +218,11 @@ A camada Gold foi desenhada para alimentar diretamente casos de uso de inteligê
 - **Modelos de predição de alfabetização**: `fato_aluno_alfabetizacao` (Silver) fornece 3,87 mi de observações com proficiência, presença, rede e território — base para prever risco de não-alfabetização por município/escola. Enriquecida com fontes externas (Censo Escolar, indicadores socioeconômicos do IBGE), suporta modelos de regressão/classificação com features contextuais
 - **Análise de desigualdade educacional**: as distribuições por nível de proficiência (`fato_distribuicao_nivel_*`) permitem medir dispersão intra-UF e clusters de vulnerabilidade educacional (ex.: k-means sobre distância à meta + nível socioeconômico)
 - **Políticas públicas baseadas em dados**: os rankings de priorização da Gold são o insumo direto para alocação de recursos do Compromisso Nacional — a evolução temporal permite avaliar efeito de intervenções (diferença-em-diferenças entre municípios priorizados e não priorizados)
+- **Simulação de cenários até 2030**: `src/ml/simular_cenarios_2030.py` gera a tabela `gold.simulacao_alfabetizacao_2030`, cruzando o resultado municipal observado mais recente com as metas oficiais anuais. A saída compara cenários conservador, base e acelerado, calcula gap para a meta, probabilidade indicativa de atingimento e classe de risco territorial. Como a série observada ainda é curta, o uso recomendado é análise de cenários explicável, não previsão temporal definitiva.
+
+```bash
+python -m src.ml.simular_cenarios_2030
+```
 
 ---
 
