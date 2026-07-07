@@ -26,37 +26,9 @@ O desafio analítico: acompanhar esse indicador exige integrar fontes heterogên
 
 ### Visão geral
 
-```mermaid
-flowchart LR
-    subgraph Fontes
-        BD[("Base dos Dados<br/>(BigQuery)")]
-    end
+![Arquitetura do projeto — pipeline híbrido local e AWS](docs/arquitetura_projeto.png)
 
-    subgraph Ingestão
-        BATCH["Ingestão Batch<br/>(download_bigquery.py)"]
-        PROD["Producer<br/>(eventos simulados)"]
-        FILA["Stream<br/>(fila local ou Kinesis)"]
-        CONS["Consumer<br/>(local ou Lambda)"]
-    end
-
-    subgraph "Arquitetura Medalhão"
-        BRONZE["🥉 Bronze<br/>dados brutos<br/>parquet particionado"]
-        SILVER["🥈 Silver<br/>dados tratados<br/>dims + fatos + flags de qualidade"]
-        GOLD["🥇 Gold<br/>datasets analíticos<br/>metas vs resultados, rankings"]
-    end
-
-    subgraph Consumo
-        DASH["Dashboards"]
-        ML["Modelos de ML"]
-        ANALISE["Análises estatísticas"]
-    end
-
-    BD -->|"batch (metas, territórios,<br/>agregados)"| BATCH --> BRONZE
-    BD -.->|"origem dos eventos"| PROD
-    PROD --> FILA --> CONS -->|"micro-lotes<br/>quase tempo real"| BRONZE
-    BRONZE --> SILVER --> GOLD
-    GOLD --> DASH & ML & ANALISE
-```
+Fonte editável do diagrama: [docs/diagrama_arquitetura.drawio](docs/diagrama_arquitetura.drawio)
 
 ### Fluxo de dados
 

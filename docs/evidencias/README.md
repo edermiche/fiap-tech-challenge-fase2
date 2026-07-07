@@ -14,6 +14,7 @@ Teste de 2026-07-07 — Glue Workflow (bronze → silver → gold) e recursos do
 - [x] `s3_silver.png` — partições `execution_date=` na camada silver
 - [x] `s3_gold.png` — partições `execution_date=` na camada gold
 - [x] `lambda_consumer.png` — função `fiap-alfabetizacao-consumer` (consumer do streaming, invocada no teste de 2026-07-02)
+- [x] `notificacao_error_sns.png` — e-mail de alerta recebido no teste de falha controlada (2026-07-07)
 
 > As métricas do Kinesis não têm mais print disponível: o stream foi destruído por FinOps
 > após o teste de 2026-07-02 (registro textual abaixo). O funcionamento fica evidenciado
@@ -88,3 +89,17 @@ Execução `wr_bd176603...aae6` — **COMPLETED**, 3/3 ações com sucesso (`glu
 - Kinesis permaneceu desligado: o streaming em nuvem foi evidenciado no teste de 2026-07-02;
   os eventos que ele gravou na bronze S3 foram consumidos agora pela silver — fechando o
   ciclo híbrido também na nuvem
+
+### Teste do alerta de falha (EventBridge → SNS → e-mail)
+
+Falha controlada para exercitar o monitoramento, executada fora do workflow
+(job avulso com `--SRC_ZIP_KEY` apontando para um zip inexistente — não toca no lake):
+
+- Job `fiap-alfabetizacao-silver-transformacoes`, run `jr_dfe62dc9...da261f`:
+  **FAILED** em 17 s com `NoSuchKey: The specified key does not exist`
+- Regra EventBridge `fiap-alfabetizacao-glue-job-falha` capturou a mudança de estado
+- SNS `fiap-alfabetizacao-alertas`: `NumberOfNotificationsDelivered = 1` — e-mail de
+  alerta entregue à assinatura confirmada (`lucas.alexsant2@gmail.com`)
+
+> A assinatura de e-mail original havia expirado sem confirmação (o SNS descarta
+> assinaturas pendentes após 3 dias); foi recriada e confirmada em 2026-07-07 antes do teste.
