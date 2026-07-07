@@ -344,7 +344,7 @@ O projeto segue a abordagem **CRISP-DM** (entendimento do negócio → entendime
 - [x] Alertas de falha de job Glue via EventBridge + SNS (e-mail)
 - [x] Ingestão batch na nuvem (Glue Job `bronze-ingestao` + Glue Workflow + Scheduler)
 - [x] Carregar a service account GCP no Secrets Manager e habilitar o agendamento
-- [ ] Plugar Silver (`src/silver`) e Gold (`src/gold`) como Glue Jobs no workflow (hoje `pipeline_jobs` só lista `bronze_ingestao`; local já roda as três camadas via `main.py`)
-- [ ] Atualização do notebook de quality checks para a estrutura atual da Silver
-- [ ] Enriquecimento com fontes externas (Censo Escolar, IBGE) para os casos de uso de IA
+- [x] Plugar Silver (`src/silver`) e Gold (`src/gold`) 
+- [x] Atualização do notebook de quality checks para a estrutura atual da Silver
+- [x] Enriquecimento com fontes externas (Censo Escolar, IBGE) para os casos de uso de IA
 - [ ] Vídeo executivo (até 5 min)
