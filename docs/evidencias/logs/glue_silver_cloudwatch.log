@@ -1,0 +1,69 @@
+SCRIPT_LOCATION = s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/silver_transformacoes.py
+file = s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/silver_transformacoes.py
+file to download from: s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/silver_transformacoes.py
+downloading s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/silver_transformacoes.py; attempt: 0...
+Completed 1.5 KiB/1.5 KiB (24.3 KiB/s) with 1 file(s) remainingdownload: s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/silver_transformacoes.py to glue-python-scripts-6rBn/silver_transformacoes.py
+downloaded s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/silver_transformacoes.py.
+Setting python runtime env to 3.9 analytics (default)
+Setup complete. Starting script execution: 
+ ---- 
+Pacote src/ extraído de s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/src_pipeline.zip
+Iniciando processamento da camada silver
+Lendo bronze: s3://fiap-alfabetizacao-lake-147997124244/bronze/uf
+Lendo bronze: s3://fiap-alfabetizacao-lake-147997124244/bronze/municipio
+Lendo bronze: s3://fiap-alfabetizacao-lake-147997124244/bronze/meta_alfabetizacao_brasil
+Lendo bronze: s3://fiap-alfabetizacao-lake-147997124244/bronze/meta_alfabetizacao_uf
+Lendo bronze: s3://fiap-alfabetizacao-lake-147997124244/bronze/meta_alfabetizacao_municipio
+Lendo bronze: s3://fiap-alfabetizacao-lake-147997124244/bronze/alunos
+Lendo bronze: s3://fiap-alfabetizacao-lake-147997124244/bronze/bolsa_familia_municipio
+Lendo bronze streaming: s3://fiap-alfabetizacao-lake-147997124244/bronze/alunos_streaming
+Alunos híbrido: 3867999 batch + 2000 streaming
+[QUALIDADE] silver.dominio_regiao_uf: 27 -> 27 linhas (0 removidas)
+[QUALIDADE] silver.dim_uf: 25 -> 25 linhas (0 removidas)
+[QUALIDADE] silver.dim_municipio: 5550 -> 5550 linhas (0 removidas)
+[QUALIDADE] silver.dim_escola: 78408 -> 42811 linhas (35597 removidas)
+[QUALIDADE] silver.fato_resultado_brasil: 3 -> 3 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_uf: 145 -> 145 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_municipio: 23995 -> 23995 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_meta_uf: 81 -> 77 linhas (4 removidas)
+[QUALIDADE] silver.fato_resultado_meta_municipio: 10704 -> 10584 linhas (120 removidas)
+[QUALIDADE] silver.fato_meta_anual_brasil: 21 -> 21 linhas (0 removidas)
+[QUALIDADE] silver.fato_meta_anual_uf: 567 -> 545 linhas (22 removidas)
+[QUALIDADE] silver.fato_meta_anual_municipio: 74928 -> 74688 linhas (240 removidas)
+[QUALIDADE] silver.fato_distribuicao_nivel_uf: 1305 -> 675 linhas (630 removidas)
+[QUALIDADE] silver.fato_distribuicao_nivel_municipio: 215955 -> 112032 linhas (103923 removidas)
+[QUALIDADE] silver.fato_aluno_alfabetizacao: 3867999 -> 3867999 linhas (0 removidas)
+[QUALIDADE] silver.fato_bolsa_familia_municipio: 11140 -> 11140 linhas (0 removidas)
+[OK] silver.dominio_regiao_uf salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/dominio_regiao_uf/execution_date=2026-07-07
+Linhas: 27 | Colunas: 3
+[OK] silver.dim_uf salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/dim_uf/execution_date=2026-07-07
+Linhas: 25 | Colunas: 4
+[OK] silver.dim_municipio salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/dim_municipio/execution_date=2026-07-07
+Linhas: 5550 | Colunas: 3
+[OK] silver.dim_escola salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/dim_escola/execution_date=2026-07-07
+Linhas: 42811 | Colunas: 4
+[OK] silver.fato_resultado_brasil salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_resultado_brasil/execution_date=2026-07-07
+Linhas: 3 | Colunas: 8
+[OK] silver.fato_resultado_uf salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_resultado_uf/execution_date=2026-07-07
+Linhas: 145 | Colunas: 8
+[OK] silver.fato_resultado_municipio salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_resultado_municipio/execution_date=2026-07-07
+Linhas: 23995 | Colunas: 8
+[OK] silver.fato_resultado_meta_uf salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_resultado_meta_uf/execution_date=2026-07-07
+Linhas: 77 | Colunas: 9
+[OK] silver.fato_resultado_meta_municipio salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_resultado_meta_municipio/execution_date=2026-07-07
+Linhas: 10584 | Colunas: 10
+[OK] silver.fato_meta_anual_brasil salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_meta_anual_brasil/execution_date=2026-07-07
+Linhas: 21 | Colunas: 7
+[OK] silver.fato_meta_anual_uf salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_meta_anual_uf/execution_date=2026-07-07
+Linhas: 545 | Colunas: 8
+[OK] silver.fato_meta_anual_municipio salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_meta_anual_municipio/execution_date=2026-07-07
+Linhas: 74688 | Colunas: 8
+[OK] silver.fato_distribuicao_nivel_uf salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_distribuicao_nivel_uf/execution_date=2026-07-07
+Linhas: 675 | Colunas: 8
+[OK] silver.fato_distribuicao_nivel_municipio salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_distribuicao_nivel_municipio/execution_date=2026-07-07
+Linhas: 112032 | Colunas: 8
+[OK] silver.fato_aluno_alfabetizacao salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_aluno_alfabetizacao/execution_date=2026-07-07
+Linhas: 3867999 | Colunas: 21
+[OK] silver.fato_bolsa_familia_municipio salvo em: s3://fiap-alfabetizacao-lake-147997124244/silver/fato_bolsa_familia_municipio/execution_date=2026-07-07
+Linhas: 11140 | Colunas: 8
+Processamento da camada silver finalizado

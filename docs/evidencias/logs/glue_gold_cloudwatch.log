@@ -1,0 +1,54 @@
+SCRIPT_LOCATION = s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/gold_analitica.py
+file = s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/gold_analitica.py
+file to download from: s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/gold_analitica.py
+downloading s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/gold_analitica.py; attempt: 0...
+Completed 1.5 KiB/1.5 KiB (20.9 KiB/s) with 1 file(s) remainingdownload: s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/gold_analitica.py to glue-python-scripts-tvAM/gold_analitica.py
+downloaded s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/gold_analitica.py.
+Setting python runtime env to 3.9 analytics (default)
+Setup complete. Starting script execution: 
+ ---- 
+Pacote src/ extraído de s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/src_pipeline.zip
+Iniciando processamento da camada Gold
+================================================================================
+
+[CARREGAMENTO] Lendo tabelas Silver...
+[OK] silver.fato_resultado_brasil carregada: 3 linhas
+[OK] silver.fato_aluno_alfabetizacao carregada: 3867999 linhas
+[OK] silver.fato_resultado_meta_uf carregada: 77 linhas
+[OK] silver.fato_resultado_meta_municipio carregada: 10584 linhas
+[OK] silver.fato_meta_anual_brasil carregada: 21 linhas
+[OK] silver.fato_meta_anual_uf carregada: 545 linhas
+[OK] silver.fato_meta_anual_municipio carregada: 74688 linhas
+[OK] silver.dim_escola carregada: 42811 linhas
+[OK] silver.dim_municipio carregada: 5550 linhas
+[OK] silver.dominio_regiao_uf carregada: 27 linhas
+[AVISO] silver.fato_fundeb indisponível; tabelas dependentes serão puladas
+[OK] silver.fato_bolsa_familia_municipio carregada: 11140 linhas
+
+[PROCESSAMENTO] Gerando indicadores Gold...
+[OK] gold.perfil_aluno_alfabetizacao salva: 15 linhas
+[OK] gold.indicador_presenca_avaliacao salva: 12432 linhas
+[OK] gold.ranking_escolas_prioritarias salva: 79273 linhas
+[OK] gold.indicador_desempenho_aluno salva: 12432 linhas
+[OK] gold.distribuicao_desempenho_aluno salva: 659 linhas
+[OK] gold.indicador_meta_brasil salva: 2 linhas
+[OK] gold.comparacao_meta_resultado_brasil salva: 2 linhas
+[OK] gold.indicador_meta_uf salva: 50 linhas
+[OK] gold.comparacao_meta_resultado_uf salva: 50 linhas
+[OK] gold.evolucao_meta_resultado_uf salva: 50 linhas
+[OK] gold.meta_uf_bolsa_familia salva: 50 linhas
+[OK] gold.indicador_meta_regiao salva: 10 linhas
+[OK] gold.ranking_uf_prioritaria salva: 16 linhas
+[OK] gold.indicador_meta_municipio salva: 5232 linhas
+[OK] gold.comparacao_meta_resultado_municipio salva: 5232 linhas
+[OK] gold.evolucao_meta_resultado_municipio salva: 5232 linhas
+[OK] gold.ranking_territorial_prioridade salva: 2444 linhas
+[OK] gold.desigualdade_territorial_uf salva: 24 linhas
+[OK] gold.mapa_calor_territorial salva: 5232 linhas
+[OK] gold.indicador_alfabetizacao_municipio salva: 5232 linhas
+[OK] gold.ranking_municipio_prioritario salva: 20 linhas
+[OK] gold.evolucao_alfabetizacao salva: 3 linhas
+[OK] gold.resumo_status_meta salva: 8 linhas
+
+================================================================================
+Processamento da camada Gold finalizado com sucesso!

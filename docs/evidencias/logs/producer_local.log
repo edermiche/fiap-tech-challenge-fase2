@@ -1,0 +1,10 @@
+Iniciando producer de eventos de alfabetização
+Fonte: data\bronze\alunos\processado\ano=2024\alunos_processado.parquet
+Destino: local
+Total de eventos: 500 | Tamanho do lote: 100
+Lote 1 publicado: 100 eventos (100/500) -> lote_20260707_175422_315087_00001.json
+Lote 2 publicado: 100 eventos (200/500) -> lote_20260707_175423_318187_00002.json
+Lote 3 publicado: 100 eventos (300/500) -> lote_20260707_175424_319710_00003.json
+Lote 4 publicado: 100 eventos (400/500) -> lote_20260707_175425_321581_00004.json
+Lote 5 publicado: 100 eventos (500/500) -> lote_20260707_175426_323640_00005.json
+Producer finalizado: 500 eventos publicados

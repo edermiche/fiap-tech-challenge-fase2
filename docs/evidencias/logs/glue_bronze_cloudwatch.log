@@ -1,0 +1,188 @@
+SCRIPT_LOCATION = s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/bronze_ingestao.py
+file = s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/bronze_ingestao.py
+file to download from: s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/bronze_ingestao.py
+downloading s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/bronze_ingestao.py; attempt: 0...
+Completed 6.3 KiB/6.3 KiB (61.3 KiB/s) with 1 file(s) remainingdownload: s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/bronze_ingestao.py to glue-python-scripts-F0pv/bronze_ingestao.py
+downloaded s3://fiap-alfabetizacao-lake-147997124244/glue/scripts/bronze_ingestao.py.
+Setting python runtime env to 3.9 analytics (default)
+ADDITIONAL_PYTHON_MODULES = google-cloud-bigquery==3.13.0,google-cloud-bigquery-storage==2.24.0,db-dtypes==1.2.0,grpcio==1.62.2,protobuf==4.25.3
+installing --MAX_BYTES_BILLED; attempt: 0...
+Collecting google-cloud-bigquery==3.13.0
+  Downloading google_cloud_bigquery-3.13.0-py2.py3-none-any.whl.metadata (8.5 kB)
+Collecting google-cloud-bigquery-storage==2.24.0
+  Downloading google_cloud_bigquery_storage-2.24.0-py2.py3-none-any.whl.metadata (5.6 kB)
+Collecting db-dtypes==1.2.0
+  Downloading db_dtypes-1.2.0-py2.py3-none-any.whl.metadata (3.0 kB)
+Collecting grpcio==1.62.2
+  Downloading grpcio-1.62.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.0 kB)
+Collecting protobuf==4.25.3
+  Downloading protobuf-4.25.3-cp37-abi3-manylinux2014_x86_64.whl.metadata (541 bytes)
+Collecting google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading google_api_core-2.30.3-py3-none-any.whl.metadata (3.1 kB)
+Collecting proto-plus<2.0.0dev,>=1.15.0 (from google-cloud-bigquery==3.13.0)
+  Downloading proto_plus-1.27.2-py3-none-any.whl.metadata (2.2 kB)
+Collecting google-cloud-core<3.0.0dev,>=1.6.0 (from google-cloud-bigquery==3.13.0)
+  Downloading google_cloud_core-2.5.1-py3-none-any.whl.metadata (2.8 kB)
+Collecting google-resumable-media<3.0dev,>=0.6.0 (from google-cloud-bigquery==3.13.0)
+  Downloading google_resumable_media-2.8.2-py3-none-any.whl.metadata (2.2 kB)
+Requirement already satisfied: packaging>=20.0.0 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from google-cloud-bigquery==3.13.0) (23.2)
+Requirement already satisfied: python-dateutil<3.0dev,>=2.7.2 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from google-cloud-bigquery==3.13.0) (2.8.2)
+Requirement already satisfied: requests<3.0.0dev,>=2.21.0 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from google-cloud-bigquery==3.13.0) (2.27.1)
+Requirement already satisfied: pandas>=0.24.2 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from db-dtypes==1.2.0) (1.4.2)
+Requirement already satisfied: pyarrow>=3.0.0 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from db-dtypes==1.2.0) (7.0.0)
+Requirement already satisfied: numpy>=1.16.6 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from db-dtypes==1.2.0) (1.22.3)
+Collecting googleapis-common-protos<2.0.0,>=1.63.2 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading googleapis_common_protos-1.75.0-py3-none-any.whl.metadata (8.6 kB)
+INFO: pip is looking at multiple versions of google-api-core to determine which version is compatible with other requirements. This could take a while.
+Collecting google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading google_api_core-2.30.2-py3-none-any.whl.metadata (3.1 kB)
+  Downloading google_api_core-2.30.1-py3-none-any.whl.metadata (3.1 kB)
+  Downloading google_api_core-2.30.0-py3-none-any.whl.metadata (3.1 kB)
+  Downloading google_api_core-2.29.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting google-auth<3.0.0,>=2.14.1 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading google_auth-2.50.0-py3-none-any.whl.metadata (6.2 kB)
+INFO: pip is looking at multiple versions of google-api-core[grpc] to determine which version is compatible with other requirements. This could take a while.
+Collecting grpcio-status<2.0.0,>=1.33.2 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading grpcio_status-1.80.0-py3-none-any.whl.metadata (1.3 kB)
+Collecting google-crc32c<2.0.0,>=1.0.0 (from google-resumable-media<3.0dev,>=0.6.0->google-cloud-bigquery==3.13.0)
+  Downloading google_crc32c-1.8.0-cp39-cp39-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl.metadata (1.7 kB)
+Requirement already satisfied: pytz>=2020.1 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from pandas>=0.24.2->db-dtypes==1.2.0) (2022.1)
+INFO: pip is looking at multiple versions of proto-plus to determine which version is compatible with other requirements. This could take a while.
+Collecting proto-plus<2.0.0dev,>=1.15.0 (from google-cloud-bigquery==3.13.0)
+  Downloading proto_plus-1.27.1-py3-none-any.whl.metadata (2.2 kB)
+Requirement already satisfied: six>=1.5 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from python-dateutil<3.0dev,>=2.7.2->google-cloud-bigquery==3.13.0) (1.16.0)
+Requirement already satisfied: urllib3<1.27,>=1.21.1 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from requests<3.0.0dev,>=2.21.0->google-cloud-bigquery==3.13.0) (1.26.18)
+Requirement already satisfied: certifi>=2017.4.17 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from requests<3.0.0dev,>=2.21.0->google-cloud-bigquery==3.13.0) (2023.11.17)
+Requirement already satisfied: charset-normalizer~=2.0.0 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from requests<3.0.0dev,>=2.21.0->google-cloud-bigquery==3.13.0) (2.0.12)
+Requirement already satisfied: idna<4,>=2.5 in /.pyenv/versions/3.9.10/envs/python39_loaded/lib/python3.9/site-packages (from requests<3.0.0dev,>=2.21.0->google-cloud-bigquery==3.13.0) (3.6)
+Collecting pyasn1-modules>=0.2.1 (from google-auth<3.0.0,>=2.14.1->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading pyasn1_modules-0.4.2-py3-none-any.whl.metadata (3.5 kB)
+Collecting cryptography>=38.0.3 (from google-auth<3.0.0,>=2.14.1->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading cryptography-49.0.0-cp39-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (4.3 kB)
+INFO: pip is looking at multiple versions of googleapis-common-protos to determine which version is compatible with other requirements. This could take a while.
+Collecting googleapis-common-protos<2.0.0,>=1.56.2 (from google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading googleapis_common_protos-1.74.0-py3-none-any.whl.metadata (9.2 kB)
+  Downloading googleapis_common_protos-1.73.1-py3-none-any.whl.metadata (9.2 kB)
+  Downloading googleapis_common_protos-1.73.0-py3-none-any.whl.metadata (9.4 kB)
+INFO: pip is looking at multiple versions of grpcio-status to determine which version is compatible with other requirements. This could take a while.
+Collecting grpcio-status<2.0.0,>=1.33.2 (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading grpcio_status-1.78.0-py3-none-any.whl.metadata (1.3 kB)
+  Downloading grpcio_status-1.76.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.75.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.75.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.74.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.73.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.73.0-py3-none-any.whl.metadata (1.1 kB)
+INFO: pip is still looking at multiple versions of grpcio-status to determine which version is compatible with other requirements. This could take a while.
+  Downloading grpcio_status-1.72.2-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.72.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.71.2-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.71.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.70.0-py3-none-any.whl.metadata (1.1 kB)
+INFO: This is taking longer than usual. You might need to provide the dependency resolver with stricter constraints to reduce runtime. See https://pip.pypa.io/warnings/backtracking for guidance. If you want to abort this run, press Ctrl + C.
+  Downloading grpcio_status-1.69.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.68.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.68.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.67.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.67.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.66.2-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.66.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.66.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.65.5-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.65.4-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.65.2-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.65.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.64.3-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.64.1-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.64.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.63.2-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.63.0-py3-none-any.whl.metadata (1.1 kB)
+  Downloading grpcio_status-1.62.3-py3-none-any.whl.metadata (1.3 kB)
+  Downloading grpcio_status-1.62.2-py3-none-any.whl.metadata (1.3 kB)
+Collecting cffi>=2.0.0 (from cryptography>=38.0.3->google-auth<3.0.0,>=2.14.1->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading cffi-2.0.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (2.6 kB)
+Collecting typing-extensions>=4.13.2 (from cryptography>=38.0.3->google-auth<3.0.0,>=2.14.1->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Collecting pyasn1<0.7.0,>=0.6.1 (from pyasn1-modules>=0.2.1->google-auth<3.0.0,>=2.14.1->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading pyasn1-0.6.3-py3-none-any.whl.metadata (8.4 kB)
+Collecting pycparser (from cffi>=2.0.0->cryptography>=38.0.3->google-auth<3.0.0,>=2.14.1->google-api-core!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0,<3.0.0dev,>=1.31.5->google-cloud-bigquery==3.13.0)
+  Downloading pycparser-2.23-py3-none-any.whl.metadata (993 bytes)
+Downloading google_cloud_bigquery-3.13.0-py2.py3-none-any.whl (222 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 222.8/222.8 kB 8.8 MB/s eta 0:00:00
+Downloading google_cloud_bigquery_storage-2.24.0-py2.py3-none-any.whl (190 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 190.6/190.6 kB 75.2 MB/s eta 0:00:00
+Downloading db_dtypes-1.2.0-py2.py3-none-any.whl (14 kB)
+Downloading grpcio-1.62.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (5.6 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 5.6/5.6 MB 118.2 MB/s eta 0:00:00
+Downloading protobuf-4.25.3-cp37-abi3-manylinux2014_x86_64.whl (294 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 294.6/294.6 kB 294.4 MB/s eta 0:00:00
+Downloading google_api_core-2.29.0-py3-none-any.whl (173 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 173.9/173.9 kB 316.5 MB/s eta 0:00:00
+Downloading google_cloud_core-2.5.1-py3-none-any.whl (29 kB)
+Downloading google_resumable_media-2.8.2-py3-none-any.whl (81 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 81.5/81.5 kB 253.6 MB/s eta 0:00:00
+Downloading proto_plus-1.27.1-py3-none-any.whl (50 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 50.5/50.5 kB 249.7 MB/s eta 0:00:00
+Downloading google_auth-2.50.0-py3-none-any.whl (246 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 246.5/246.5 kB 48.9 MB/s eta 0:00:00
+Downloading google_crc32c-1.8.0-cp39-cp39-manylinux1_x86_64.manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_5_x86_64.whl (33 kB)
+Downloading googleapis_common_protos-1.73.0-py3-none-any.whl (297 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 297.6/297.6 kB 302.3 MB/s eta 0:00:00
+Downloading grpcio_status-1.62.2-py3-none-any.whl (14 kB)
+Downloading cryptography-49.0.0-cp39-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.7/4.7 MB 299.5 MB/s eta 0:00:00
+Downloading pyasn1_modules-0.4.2-py3-none-any.whl (181 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 181.3/181.3 kB 295.8 MB/s eta 0:00:00
+Downloading cffi-2.0.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (216 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 216.5/216.5 kB 309.7 MB/s eta 0:00:00
+Downloading pyasn1-0.6.3-py3-none-any.whl (83 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 84.0/84.0 kB 277.9 MB/s eta 0:00:00
+Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.6/45.6 kB 180.6 MB/s eta 0:00:00
+Downloading pycparser-2.23-py3-none-any.whl (118 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 118.1/118.1 kB 263.1 MB/s eta 0:00:00
+Installing collected packages: typing-extensions, pycparser, pyasn1, protobuf, grpcio, google-crc32c, pyasn1-modules, proto-plus, googleapis-common-protos, google-resumable-media, cffi, grpcio-status, db-dtypes, cryptography, google-auth, google-api-core, google-cloud-core, google-cloud-bigquery-storage, google-cloud-bigquery
+  Attempting uninstall: typing-extensions
+    Found existing installation: typing_extensions 4.9.0
+    Uninstalling typing_extensions-4.9.0:
+      Successfully uninstalled typing_extensions-4.9.0
+  Attempting uninstall: pyasn1
+    Found existing installation: pyasn1 0.5.1
+    Uninstalling pyasn1-0.5.1:
+      Successfully uninstalled pyasn1-0.5.1
+Successfully installed cffi-2.0.0 cryptography-49.0.0 db-dtypes-1.2.0 google-api-core-2.29.0 google-auth-2.50.0 google-cloud-bigquery-3.13.0 google-cloud-bigquery-storage-2.24.0 google-cloud-core-2.5.1 google-crc32c-1.8.0 google-resumable-media-2.8.2 googleapis-common-protos-1.73.0 grpcio-1.62.2 grpcio-status-1.62.2 proto-plus-1.27.1 protobuf-4.25.3 pyasn1-0.6.3 pyasn1-modules-0.4.2 pycparser-2.23 typing-extensions-4.16.0
+Setup complete. Starting script execution: 
+ ---- 
+Autenticado via service account: fiap-bronze-ingestao@fiaptechchallenge.iam.gserviceaccount.com
+Projeto GCP: fiaptechchallenge
+Bucket destino: fiap-alfabetizacao-lake-147997124244
+Limite por consulta: 28610 MB
+
+Estimativa de volume (dry run):
+                      tabela  mb_estimados
+                          uf          0.01
+   meta_alfabetizacao_brasil          0.00
+       meta_alfabetizacao_uf          0.01
+meta_alfabetizacao_municipio          1.22
+                   municipio          1.87
+                      alunos        256.23
+     bolsa_familia_municipio           NaN
+
+Iniciando download:
+[SKIP] uf: objeto já existe (s3://fiap-alfabetizacao-lake-147997124244/bronze/uf/execution_date=2026-07-07/uf.parquet)
+[SKIP] meta_alfabetizacao_brasil: objeto já existe (s3://fiap-alfabetizacao-lake-147997124244/bronze/meta_alfabetizacao_brasil/execution_date=2026-07-07/meta_alfabetizacao_brasil.parquet)
+[SKIP] meta_alfabetizacao_uf: objeto já existe (s3://fiap-alfabetizacao-lake-147997124244/bronze/meta_alfabetizacao_uf/execution_date=2026-07-07/meta_alfabetizacao_uf.parquet)
+[SKIP] meta_alfabetizacao_municipio: objeto já existe (s3://fiap-alfabetizacao-lake-147997124244/bronze/meta_alfabetizacao_municipio/execution_date=2026-07-07/meta_alfabetizacao_municipio.parquet)
+[SKIP] municipio: objeto já existe (s3://fiap-alfabetizacao-lake-147997124244/bronze/municipio/execution_date=2026-07-07/municipio.parquet)
+[SKIP] alunos: objeto já existe (s3://fiap-alfabetizacao-lake-147997124244/bronze/alunos/execution_date=2026-07-07/alunos.parquet)
+[SKIP] bolsa_familia_municipio: objeto já existe (s3://fiap-alfabetizacao-lake-147997124244/bronze/bolsa_familia_municipio/execution_date=2026-07-07/bolsa_familia_municipio.parquet)
+
+Resumo:
+                      tabela     status linhas
+                          uf ja_existia   None
+   meta_alfabetizacao_brasil ja_existia   None
+       meta_alfabetizacao_uf ja_existia   None
+meta_alfabetizacao_municipio ja_existia   None
+                   municipio ja_existia   None
+                      alunos ja_existia   None
+     bolsa_familia_municipio ja_existia   None

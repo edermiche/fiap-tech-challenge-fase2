@@ -1,0 +1,133 @@
+Iniciando processamento da camada bronze
+Processando entidade: alunos
+Lendo arquivo: data\bronze\alunos\execution_date=2026-07-02\alunos.parquet
+Entidade processada: alunos
+Arquivo salvo em: data\bronze\alunos\processado (particionado por ano)
+Processando entidade: bolsa_familia_municipio
+Lendo arquivo: data\bronze\bolsa_familia_municipio\execution_date=2026-07-04\bolsa_familia_municipio.parquet
+Entidade processada: bolsa_familia_municipio
+Arquivo salvo em: data\bronze\bolsa_familia_municipio\processado (particionado por ano)
+Processando entidade: meta_alfabetizacao_brasil
+Lendo arquivo: data\bronze\meta_alfabetizacao_brasil\execution_date=2026-07-02\meta_alfabetizacao_brasil.parquet
+Entidade processada: meta_alfabetizacao_brasil
+Arquivo salvo em: data\bronze\meta_alfabetizacao_brasil\processado (particionado por ano)
+Processando entidade: meta_alfabetizacao_municipio
+Lendo arquivo: data\bronze\meta_alfabetizacao_municipio\execution_date=2026-07-02\meta_alfabetizacao_municipio.parquet
+Entidade processada: meta_alfabetizacao_municipio
+Arquivo salvo em: data\bronze\meta_alfabetizacao_municipio\processado (particionado por ano)
+Processando entidade: meta_alfabetizacao_uf
+Lendo arquivo: data\bronze\meta_alfabetizacao_uf\execution_date=2026-07-02\meta_alfabetizacao_uf.parquet
+Entidade processada: meta_alfabetizacao_uf
+Arquivo salvo em: data\bronze\meta_alfabetizacao_uf\processado (particionado por ano)
+Processando entidade: municipio
+Lendo arquivo: data\bronze\municipio\execution_date=2026-07-02\municipio.parquet
+Entidade processada: municipio
+Arquivo salvo em: data\bronze\municipio\processado (particionado por ano)
+Processando entidade: uf
+Lendo arquivo: data\bronze\uf\execution_date=2026-07-02\uf.parquet
+Entidade processada: uf
+Arquivo salvo em: data\bronze\uf\processado (particionado por ano)
+Processamento da camada bronze finalizado
+Iniciando processamento da camada silver
+Lendo bronze: data\bronze\uf\processado
+Lendo bronze: data\bronze\municipio\processado
+Lendo bronze: data\bronze\meta_alfabetizacao_brasil\processado
+Lendo bronze: data\bronze\meta_alfabetizacao_uf\processado
+Lendo bronze: data\bronze\meta_alfabetizacao_municipio\processado
+Lendo bronze: data\bronze\alunos\processado
+Lendo bronze: data\bronze\bolsa_familia_municipio\processado
+Lendo bronze streaming: data\bronze\alunos_streaming
+Alunos híbrido: 3867999 batch + 2000 streaming
+[QUALIDADE] silver.dominio_regiao_uf: 27 -> 27 linhas (0 removidas)
+[QUALIDADE] silver.dim_uf: 25 -> 25 linhas (0 removidas)
+[QUALIDADE] silver.dim_municipio: 5550 -> 5550 linhas (0 removidas)
+[QUALIDADE] silver.dim_escola: 78408 -> 42811 linhas (35597 removidas)
+[QUALIDADE] silver.fato_resultado_brasil: 3 -> 3 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_uf: 145 -> 145 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_municipio: 23995 -> 23995 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_meta_uf: 81 -> 77 linhas (4 removidas)
+[QUALIDADE] silver.fato_resultado_meta_municipio: 10704 -> 10584 linhas (120 removidas)
+[QUALIDADE] silver.fato_meta_anual_brasil: 21 -> 21 linhas (0 removidas)
+[QUALIDADE] silver.fato_meta_anual_uf: 567 -> 545 linhas (22 removidas)
+[QUALIDADE] silver.fato_meta_anual_municipio: 74928 -> 74688 linhas (240 removidas)
+[QUALIDADE] silver.fato_distribuicao_nivel_uf: 1305 -> 675 linhas (630 removidas)
+[QUALIDADE] silver.fato_distribuicao_nivel_municipio: 215955 -> 112032 linhas (103923 removidas)
+[QUALIDADE] silver.fato_aluno_alfabetizacao: 3867999 -> 3867999 linhas (0 removidas)
+[QUALIDADE] silver.fato_bolsa_familia_municipio: 11140 -> 11140 linhas (0 removidas)
+[OK] silver.dominio_regiao_uf salvo em: data\silver\dominio_regiao_uf\execution_date=2026-07-07
+Linhas: 27 | Colunas: 3
+[OK] silver.dim_uf salvo em: data\silver\dim_uf\execution_date=2026-07-07
+Linhas: 25 | Colunas: 4
+[OK] silver.dim_municipio salvo em: data\silver\dim_municipio\execution_date=2026-07-07
+Linhas: 5550 | Colunas: 3
+[OK] silver.dim_escola salvo em: data\silver\dim_escola\execution_date=2026-07-07
+Linhas: 42811 | Colunas: 4
+[OK] silver.fato_resultado_brasil salvo em: data\silver\fato_resultado_brasil\execution_date=2026-07-07
+Linhas: 3 | Colunas: 8
+[OK] silver.fato_resultado_uf salvo em: data\silver\fato_resultado_uf\execution_date=2026-07-07
+Linhas: 145 | Colunas: 8
+[OK] silver.fato_resultado_municipio salvo em: data\silver\fato_resultado_municipio\execution_date=2026-07-07
+Linhas: 23995 | Colunas: 8
+[OK] silver.fato_resultado_meta_uf salvo em: data\silver\fato_resultado_meta_uf\execution_date=2026-07-07
+Linhas: 77 | Colunas: 9
+[OK] silver.fato_resultado_meta_municipio salvo em: data\silver\fato_resultado_meta_municipio\execution_date=2026-07-07
+Linhas: 10584 | Colunas: 10
+[OK] silver.fato_meta_anual_brasil salvo em: data\silver\fato_meta_anual_brasil\execution_date=2026-07-07
+Linhas: 21 | Colunas: 7
+[OK] silver.fato_meta_anual_uf salvo em: data\silver\fato_meta_anual_uf\execution_date=2026-07-07
+Linhas: 545 | Colunas: 8
+[OK] silver.fato_meta_anual_municipio salvo em: data\silver\fato_meta_anual_municipio\execution_date=2026-07-07
+Linhas: 74688 | Colunas: 8
+[OK] silver.fato_distribuicao_nivel_uf salvo em: data\silver\fato_distribuicao_nivel_uf\execution_date=2026-07-07
+Linhas: 675 | Colunas: 8
+[OK] silver.fato_distribuicao_nivel_municipio salvo em: data\silver\fato_distribuicao_nivel_municipio\execution_date=2026-07-07
+Linhas: 112032 | Colunas: 8
+[OK] silver.fato_aluno_alfabetizacao salvo em: data\silver\fato_aluno_alfabetizacao\execution_date=2026-07-07
+Linhas: 3867999 | Colunas: 21
+[OK] silver.fato_bolsa_familia_municipio salvo em: data\silver\fato_bolsa_familia_municipio\execution_date=2026-07-07
+Linhas: 11140 | Colunas: 8
+Processamento da camada silver finalizado
+Iniciando processamento da camada Gold
+================================================================================
+
+[CARREGAMENTO] Lendo tabelas Silver...
+[OK] silver.fato_resultado_brasil carregada: 3 linhas
+[OK] silver.fato_aluno_alfabetizacao carregada: 3867999 linhas
+[OK] silver.fato_resultado_meta_uf carregada: 77 linhas
+[OK] silver.fato_resultado_meta_municipio carregada: 10584 linhas
+[OK] silver.fato_meta_anual_brasil carregada: 21 linhas
+[OK] silver.fato_meta_anual_uf carregada: 545 linhas
+[OK] silver.fato_meta_anual_municipio carregada: 74688 linhas
+[OK] silver.dim_escola carregada: 42811 linhas
+[OK] silver.dim_municipio carregada: 5550 linhas
+[OK] silver.dominio_regiao_uf carregada: 27 linhas
+[AVISO] silver.fato_fundeb indisponível; tabelas dependentes serão puladas
+[OK] silver.fato_bolsa_familia_municipio carregada: 11140 linhas
+
+[PROCESSAMENTO] Gerando indicadores Gold...
+[OK] gold.perfil_aluno_alfabetizacao salva: 15 linhas
+[OK] gold.indicador_presenca_avaliacao salva: 12432 linhas
+[OK] gold.ranking_escolas_prioritarias salva: 79273 linhas
+[OK] gold.indicador_desempenho_aluno salva: 12432 linhas
+[OK] gold.distribuicao_desempenho_aluno salva: 659 linhas
+[OK] gold.indicador_meta_brasil salva: 2 linhas
+[OK] gold.comparacao_meta_resultado_brasil salva: 2 linhas
+[OK] gold.indicador_meta_uf salva: 50 linhas
+[OK] gold.comparacao_meta_resultado_uf salva: 50 linhas
+[OK] gold.evolucao_meta_resultado_uf salva: 50 linhas
+[OK] gold.meta_uf_bolsa_familia salva: 50 linhas
+[OK] gold.indicador_meta_regiao salva: 10 linhas
+[OK] gold.ranking_uf_prioritaria salva: 16 linhas
+[OK] gold.indicador_meta_municipio salva: 5232 linhas
+[OK] gold.comparacao_meta_resultado_municipio salva: 5232 linhas
+[OK] gold.evolucao_meta_resultado_municipio salva: 5232 linhas
+[OK] gold.ranking_territorial_prioridade salva: 2444 linhas
+[OK] gold.desigualdade_territorial_uf salva: 24 linhas
+[OK] gold.mapa_calor_territorial salva: 5232 linhas
+[OK] gold.indicador_alfabetizacao_municipio salva: 5232 linhas
+[OK] gold.ranking_municipio_prioritario salva: 20 linhas
+[OK] gold.evolucao_alfabetizacao salva: 3 linhas
+[OK] gold.resumo_status_meta salva: 8 linhas
+
+================================================================================
+Processamento da camada Gold finalizado com sucesso!

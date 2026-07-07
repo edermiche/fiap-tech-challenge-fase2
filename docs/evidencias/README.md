@@ -1,17 +1,46 @@
-# Evidências da Execução em Nuvem (AWS)
+# Evidências da Execução do Pipeline
 
-Prints e registros da pipeline em execução na AWS (região `sa-east-1`),
-coletados durante o teste de ponta a ponta descrito no README principal.
+Prints e registros da pipeline em execução local e na AWS (região `sa-east-1`),
+coletados durante os testes de ponta a ponta descritos no README principal.
 
-## Checklist de evidências
+## Checklist de evidências (prints)
 
-- [ ] `s3_camadas.png` — bucket do data lake com os prefixos bronze/, silver/ e gold/
-- [ ] `s3_streaming_particoes.png` — arquivos parquet gravados pelo Lambda em bronze/alunos_streaming/ano=YYYY/
-- [ ] `kinesis_metricas.png` — aba Monitoring do stream com os gráficos de IncomingRecords
-- [ ] `lambda_invocacoes.png` — aba Monitor da função com as invocações do teste
-- [ ] `cloudwatch_logs.png` — logs do Lambda mostrando os lotes processados
+Teste de 2026-07-07 — Glue Workflow (bronze → silver → gold) e recursos do streaming:
 
-## Registro do teste de ponta a ponta (2026-07-02)
+- [x] `glue_workflow.png` — grafo do workflow `fiap-alfabetizacao-pipeline` com os 3 jobs SUCCEEDED
+- [x] `glue_jobs.png` — histórico de execuções dos jobs com duração
+- [x] `cloudwatch_jobs_output.png` — log group dos jobs Glue, incluindo a união híbrida no silver (`Alunos híbrido: 3867999 batch + 2000 streaming`)
+- [x] `s3_bronze.png` — camada bronze no lake, incluindo `alunos_streaming/ano=YYYY/` gravado pelo Lambda
+- [x] `s3_silver.png` — partições `execution_date=` na camada silver
+- [x] `s3_gold.png` — partições `execution_date=` na camada gold
+- [x] `lambda_consumer.png` — função `fiap-alfabetizacao-consumer` (consumer do streaming, invocada no teste de 2026-07-02)
+
+> As métricas do Kinesis não têm mais print disponível: o stream foi destruído por FinOps
+> após o teste de 2026-07-02 (registro textual abaixo). O funcionamento fica evidenciado
+> pelo log do CloudWatch daquele teste e pelos parquet em `bronze/alunos_streaming/`.
+
+Links do console para os prints (região `sa-east-1`):
+
+- Glue Workflow: <https://sa-east-1.console.aws.amazon.com/glue/home?region=sa-east-1#/v2/etl-configuration/workflows/view/fiap-alfabetizacao-pipeline>
+- Glue Jobs: <https://sa-east-1.console.aws.amazon.com/glue/home?region=sa-east-1#/v2/etl-configuration/jobs>
+- CloudWatch (log group dos jobs): <https://sa-east-1.console.aws.amazon.com/cloudwatch/home?region=sa-east-1#logsV2:log-groups/log-group/$252Faws-glue$252Fpython-jobs$252Foutput>
+- S3 silver: <https://s3.console.aws.amazon.com/s3/buckets/fiap-alfabetizacao-lake-147997124244?region=sa-east-1&prefix=silver/>
+- S3 gold: <https://s3.console.aws.amazon.com/s3/buckets/fiap-alfabetizacao-lake-147997124244?region=sa-east-1&prefix=gold/>
+- Lambda consumer: <https://sa-east-1.console.aws.amazon.com/lambda/home?region=sa-east-1#/functions/fiap-alfabetizacao-consumer?tab=monitoring>
+
+## Logs de execução ([logs/](logs/))
+
+| Arquivo | Conteúdo |
+|---|---|
+| `producer_local.log` | Producer local: 500 eventos em 5 micro-lotes para a fila |
+| `consumer_local.log` | Consumer local: 5 lotes consumidos e gravados na bronze `alunos_streaming/` |
+| `pipeline_local.log` | `python main.py` completo (bronze → silver → gold) com a união híbrida |
+| `glue_bronze_cloudwatch.log` | Job Glue `bronze-ingestao` (BigQuery → S3 com dry run de custo) |
+| `glue_silver_cloudwatch.log` | Job Glue `silver-transformacoes` lendo batch + streaming do S3 |
+| `glue_gold_cloudwatch.log` | Job Glue `gold-analitica` materializando os 23 datasets no S3 |
+| `glue_workflow_run.json` | Resumo da execução do workflow (status, horários e duração por job) |
+
+## Registro do teste de ponta a ponta — streaming AWS (2026-07-02)
 
 - 500 eventos reais de alunos enviados via `python -m src.streaming.producer --destino kinesis --total-eventos 500`
 - Kinesis `fiap-alfabetizacao-stream`: 5 micro-lotes de 100 eventos recebidos
@@ -24,3 +53,38 @@ coletados durante o teste de ponta a ponta descrito no README principal.
 ['bronze/alunos_streaming/ano=2023/eventos_20260702_231513_571657.parquet',
  'bronze/alunos_streaming/ano=2024/eventos_20260702_231513_571657.parquet']
 ```
+
+> Após o teste, o stream Kinesis foi destruído (`terraform destroy -target=aws_kinesis_stream.eventos`)
+> por FinOps — é o recurso mais caro do projeto (~US$ 11/mês) e só precisa existir
+> durante demonstrações. As evidências acima registram o funcionamento.
+
+## Registro do teste de ponta a ponta — pipeline híbrido (2026-07-07)
+
+### Local (simulação completa sem AWS)
+
+- Producer publicou 500 eventos em 5 micro-lotes na fila local (`producer_local.log`)
+- Consumer consumiu os 5 lotes e gravou na bronze `alunos_streaming/ano=YYYY/` (`consumer_local.log`)
+- `python main.py` executou bronze → silver → gold com a união híbrida (`pipeline_local.log`):
+
+```text
+Lendo bronze streaming: data\bronze\alunos_streaming
+Alunos híbrido: 3867999 batch + 2000 streaming
+```
+
+### AWS (Glue Workflow `fiap-alfabetizacao-pipeline`)
+
+Execução `wr_bd176603...aae6` — **COMPLETED**, 3/3 ações com sucesso (`glue_workflow_run.json`):
+
+| Job | Estado | Duração |
+|---|---|---|
+| `fiap-alfabetizacao-bronze-ingestao` | SUCCEEDED | 42 s |
+| `fiap-alfabetizacao-silver-transformacoes` | SUCCEEDED | 135 s |
+| `fiap-alfabetizacao-gold-analitica` | SUCCEEDED | 106 s |
+
+- Job silver leu as 7 entidades batch **e** os eventos de `bronze/alunos_streaming/` do S3,
+  unindo as duas origens (`Alunos híbrido: 3867999 batch + 2000 streaming` — replays
+  deduplicados pela chave natural, sem duplicar aluno)
+- 76 objetos gravados no lake com `execution_date=2026-07-07` (silver + gold)
+- Kinesis permaneceu desligado: o streaming em nuvem foi evidenciado no teste de 2026-07-02;
+  os eventos que ele gravou na bronze S3 foram consumidos agora pela silver — fechando o
+  ciclo híbrido também na nuvem
