@@ -12,10 +12,9 @@ import {
   id = "fiap-alfabetizacao-lake-147997124244"
 }
 
-import {
-  to = aws_kinesis_stream.eventos
-  id = "fiap-alfabetizacao-stream"
-}
+# O stream Kinesis criado pelo console foi destruído fora do período de
+# demonstração (ver nota de FinOps em kinesis.tf); sem import, um apply
+# completo o recria junto com o event source mapping do Lambda.
 
 import {
   to = aws_iam_role.lambda_consumer
@@ -37,7 +36,5 @@ import {
   id = "fiap-alfabetizacao-consumer"
 }
 
-import {
-  to = aws_lambda_event_source_mapping.kinesis
-  id = "bcb60ab7-fbcc-40c4-ab67-dd340a8ee8a1"
-}
+# O event source mapping Kinesis -> Lambda criado pelo console foi
+# removido manualmente depois; sem import, o Terraform o recria.

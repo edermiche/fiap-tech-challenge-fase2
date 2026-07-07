@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import date
 from pathlib import Path
 
@@ -22,7 +24,7 @@ def carregar_dados_bronze() -> dict[str, pd.DataFrame]:
 def salvar_tabelas_silver(
     tabelas_silver: dict[str, pd.DataFrame],
     data_processamento: date,
-) -> dict[str, Path]:
+) -> dict[str, Path | str]:
     arquivos_salvos = {}
 
     for nome_tabela, df in tabelas_silver.items():
@@ -35,7 +37,7 @@ def salvar_tabelas_silver(
     return arquivos_salvos
 
 
-def processar_camada_silver(data_processamento: date | None = None) -> dict[str, Path]:
+def processar_camada_silver(data_processamento: date | None = None) -> dict[str, Path | str]:
     """
     Processa as entidades bronze e materializa as tabelas da camada silver.
     """

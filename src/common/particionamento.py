@@ -9,6 +9,9 @@ pruning (Athena/BigQuery) — ver seção de FinOps do README. Tabelas sem
 coluna de ano (dimensões/domínios) são salvas em arquivo único, sem
 partição adicional.
 """
+# As anotações `X | None` precisam ser adiadas: o Glue Python Shell roda 3.9.
+from __future__ import annotations
+
 from pathlib import Path
 
 import pandas as pd

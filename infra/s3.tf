@@ -23,6 +23,23 @@ resource "aws_s3_object" "scripts_glue" {
   etag   = filemd5("${path.module}/../src/glue/${each.value}")
 }
 
+# Pacote src/ do pipeline: os jobs Silver e Gold baixam este zip em tempo
+# de execução e importam os mesmos módulos de transformação usados na
+# execução local — nenhuma lógica é duplicada nos scripts Glue.
+data "archive_file" "src_pipeline" {
+  type        = "zip"
+  source_dir  = "${path.module}/../src"
+  output_path = "${path.module}/build/src_pipeline.zip"
+  excludes    = ["**/__pycache__/**"]
+}
+
+resource "aws_s3_object" "src_pipeline" {
+  bucket = aws_s3_bucket.lake.id
+  key    = "glue/scripts/src_pipeline.zip"
+  source = data.archive_file.src_pipeline.output_path
+  etag   = data.archive_file.src_pipeline.output_md5
+}
+
 # Consultas SQL da ingestão bronze, lidas pelo job em tempo de execução.
 resource "aws_s3_object" "queries_bronze" {
   for_each = fileset("${path.module}/../queries/bronze", "*.sql")

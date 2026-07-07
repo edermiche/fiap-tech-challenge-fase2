@@ -1,8 +1,7 @@
 # Jobs Glue (Python Shell) das camadas do pipeline, encadeados por um
 # Glue Workflow: cada job só dispara quando o anterior conclui com
-# sucesso. A lista var.pipeline_jobs define a ordem — para plugar as
-# camadas Silver e Gold, basta acrescentar o nome do job à lista e
-# criar o script correspondente em src/glue/.
+# sucesso. A lista var.pipeline_jobs define a ordem
+# (bronze -> silver -> gold), cada nome com seu script em src/glue/.
 #
 # Python Shell (e não Spark): as transformações são pandas e o volume
 # (~4 mi de linhas) cabe com folga em 1 DPU (16 GB), a fração de
@@ -15,8 +14,7 @@ locals {
     "--S3_BUCKET" = aws_s3_bucket.lake.bucket
   }
 
-  # Argumentos específicos por job. Jobs futuros (silver/gold) que só
-  # leem e gravam no S3 não precisam de entrada aqui.
+  # Argumentos específicos por job.
   argumentos_por_job = {
     bronze_ingestao = {
       # Versões pinadas para o Python 3.9 do Glue Python Shell: as mais novas
@@ -26,6 +24,16 @@ locals {
       "--GCP_SECRET_NAME"           = aws_secretsmanager_secret.gcp_service_account.name
       "--MAX_BYTES_BILLED"          = var.max_bytes_billed
       "--QUERIES_PREFIX"            = "glue/queries/bronze"
+    }
+
+    # Silver e Gold reaproveitam os módulos locais de transformação,
+    # baixando o pacote src/ do S3 em tempo de execução.
+    silver_transformacoes = {
+      "--SRC_ZIP_KEY" = aws_s3_object.src_pipeline.key
+    }
+
+    gold_analitica = {
+      "--SRC_ZIP_KEY" = aws_s3_object.src_pipeline.key
     }
   }
 
@@ -103,7 +111,7 @@ resource "aws_glue_job" "pipeline" {
     lookup(local.argumentos_por_job, each.key, {})
   )
 
-  depends_on = [aws_s3_object.scripts_glue]
+  depends_on = [aws_s3_object.scripts_glue, aws_s3_object.src_pipeline]
 }
 
 resource "aws_glue_workflow" "pipeline" {

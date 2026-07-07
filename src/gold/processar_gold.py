@@ -1,6 +1,9 @@
 """
 Processador da camada Gold - Análises finais de alfabetização.
 """
+from __future__ import annotations
+
+import os
 from datetime import date
 from pathlib import Path
 
@@ -47,23 +50,65 @@ CODIGO_UF_POR_PREFIXO = {
 
 
 def carregar_silver(nome_tabela: str, colunas: list[str] | None = None) -> pd.DataFrame:
-    """Carrega a execução mais recente de uma tabela Silver pelo nome."""
-    caminho_tabela = SILVER_PATH / nome_tabela
-    df = ler_tabela_mais_recente(caminho_tabela, colunas=colunas)
+    """
+    Carrega a execução mais recente de uma tabela Silver pelo nome.
+    Com LAKE_S3_BUCKET definido (jobs Glue), lê direto do S3.
+    """
+    bucket = os.getenv("LAKE_S3_BUCKET")
+
+    if bucket:
+        from src.common import lake_s3
+
+        df = lake_s3.ler_tabela_mais_recente(
+            bucket, f"silver/{nome_tabela}", colunas=colunas
+        )
+    else:
+        df = ler_tabela_mais_recente(SILVER_PATH / nome_tabela, colunas=colunas)
 
     print(f"[OK] silver.{nome_tabela} carregada: {len(df)} linhas")
 
     return df
 
 
-def salvar_gold(df: pd.DataFrame, nome_tabela: str) -> Path:
-    """Salva uma tabela Gold particionada por execution_date e por ano."""
-    output_dir = GOLD_PATH / nome_tabela / f"execution_date={EXECUTION_DATE}"
-    salvar_particionado_por_ano(df, output_dir, f"{nome_tabela}.parquet")
+def carregar_silver_opcional(
+    nome_tabela: str,
+    colunas: list[str] | None = None,
+) -> pd.DataFrame | None:
+    """
+    Carrega uma tabela Silver que pode não existir — a integração FUNDEB
+    foi removida da Bronze, então fato_fundeb só existe em lakes antigos.
+    Retorna None quando ausente, e as tabelas Gold dependentes são puladas.
+    """
+    try:
+        return carregar_silver(nome_tabela, colunas=colunas)
+    except FileNotFoundError:
+        print(f"[AVISO] silver.{nome_tabela} indisponível; tabelas dependentes serão puladas")
+
+        return None
+
+
+def salvar_gold(df: pd.DataFrame, nome_tabela: str) -> Path | str:
+    """
+    Salva uma tabela Gold particionada por execution_date e por ano.
+    Com LAKE_S3_BUCKET definido (jobs Glue), grava direto no S3.
+    """
+    bucket = os.getenv("LAKE_S3_BUCKET")
+
+    if bucket:
+        from src.common import lake_s3
+
+        prefixo_execucao = f"gold/{nome_tabela}/execution_date={EXECUTION_DATE}"
+        lake_s3.salvar_particionado_por_ano(
+            df, bucket, prefixo_execucao, f"{nome_tabela}.parquet"
+        )
+        destino = f"s3://{bucket}/{prefixo_execucao}"
+    else:
+        destino = GOLD_PATH / nome_tabela / f"execution_date={EXECUTION_DATE}"
+        salvar_particionado_por_ano(df, destino, f"{nome_tabela}.parquet")
 
     print(f"[OK] gold.{nome_tabela} salva: {len(df)} linhas")
 
-    return output_dir
+    return destino
 
 
 def aplicar_status_meta(df: pd.DataFrame) -> pd.DataFrame:
@@ -1222,7 +1267,7 @@ def processar_camada_gold() -> None:
     df_dim_escola = carregar_silver("dim_escola")
     df_dim_municipio = carregar_silver("dim_municipio")
     df_dominio_regiao_uf = carregar_silver("dominio_regiao_uf")
-    df_fato_fundeb = carregar_silver("fato_fundeb")
+    df_fato_fundeb = carregar_silver_opcional("fato_fundeb")
     df_fato_bolsa_familia_municipio = carregar_silver("fato_bolsa_familia_municipio")
     
     # Processar indicadores
@@ -1296,11 +1341,12 @@ def processar_camada_gold() -> None:
         "evolucao_meta_resultado_uf",
     )
 
-    df_meta_uf_fundeb = processar_meta_uf_fundeb(
-        df_indicador_meta_uf,
-        df_fato_fundeb,
-    )
-    salvar_gold(df_meta_uf_fundeb, "meta_uf_fundeb")
+    if df_fato_fundeb is not None:
+        df_meta_uf_fundeb = processar_meta_uf_fundeb(
+            df_indicador_meta_uf,
+            df_fato_fundeb,
+        )
+        salvar_gold(df_meta_uf_fundeb, "meta_uf_fundeb")
 
     df_meta_uf_bolsa_familia = processar_meta_uf_bolsa_familia(
         df_indicador_meta_uf,

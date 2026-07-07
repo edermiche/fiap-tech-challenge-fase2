@@ -6,9 +6,9 @@ state via `import` blocks na primeira execução.
 
 ```text
 EventBridge Scheduler ──▶ Glue Workflow (Python Shell + pandas)
-                            └─ bronze_ingestao (BigQuery → s3://…/bronze)
-                               └─ [silver_transformacoes]   ← plugar depois
-                                  └─ [gold_analitica]       ← plugar depois
+                            └─ bronze_ingestao        (BigQuery → s3://…/bronze)
+                               └─ silver_transformacoes  (bronze → s3://…/silver)
+                                  └─ gold_analitica        (silver → s3://…/gold)
 
 producer local ──▶ Kinesis ──▶ Lambda consumer ──▶ s3://…/bronze/alunos_streaming
 Falha de job Glue ──▶ EventBridge rule ──▶ SNS (e-mail)
@@ -44,18 +44,19 @@ aws glue start-workflow-run --name fiap-alfabetizacao-pipeline
 # agendado: setar agendamento_habilitado = true (terraform.tfvars) e aplicar
 ```
 
-## Como plugar as camadas Silver e Gold
+## Como as camadas Silver e Gold rodam na nuvem
 
-Quando as transformações locais estiverem prontas:
+Os jobs `silver_transformacoes` e `gold_analitica` não duplicam lógica:
+o Terraform empacota `src/` em um zip no S3 (`glue/scripts/src_pipeline.zip`)
+e cada job o baixa em tempo de execução e chama o mesmo
+`processar_camada_silver()` / `processar_camada_gold()` da execução local.
+Com a variável de ambiente `LAKE_S3_BUCKET` definida (feito pelos scripts
+Glue), os leitores e gravadores do pipeline trocam `data/` pelo bucket,
+mantendo o mesmo layout de partições.
 
-1. Criar `src/glue/silver_transformacoes.py` (e depois `gold_analitica.py`)
-   lendo/gravando no S3 — usar `src/glue/bronze_ingestao.py` como modelo
-   de leitura de argumentos e escrita em parquet;
-2. Acrescentar o nome à lista em `terraform.tfvars`:
-   `pipeline_jobs = ["bronze_ingestao", "silver_transformacoes", "gold_analitica"]`;
-3. `terraform apply`.
-
-O upload do script, o job, o gatilho condicional no workflow e o alerta
+Para plugar um job novo: criar `src/glue/<nome>.py`, acrescentar `<nome>`
+à lista `pipeline_jobs` em `terraform.tfvars` e rodar `terraform apply` —
+o upload do script, o job, o gatilho condicional no workflow e o alerta
 de falha são gerados automaticamente a partir da lista.
 
 ## Custos

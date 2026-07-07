@@ -37,6 +37,7 @@ TABELAS = [
     "meta_alfabetizacao_municipio",
     "municipio",
     "alunos",
+    "bolsa_familia_municipio",
 ]
 
 s3 = boto3.client("s3")
@@ -88,12 +89,19 @@ def estimar_consultas(client, bucket: str, queries_prefix: str, tabelas: list) -
         job_config = bigquery.QueryJobConfig(dry_run=True, use_query_cache=False)
         dry_run_job = client.query(query, job_config=job_config)
 
-        mb_estimados = dry_run_job.total_bytes_processed / 1024 / 1024
+        # Algumas tabelas não reportam bytes no dry run (mesma guarda da
+        # versão local); o custo real segue travado por maximum_bytes_billed.
+        bytes_processados = dry_run_job.total_bytes_processed
+        mb_estimados = (
+            round(bytes_processados / 1024 / 1024, 2)
+            if bytes_processados is not None
+            else None
+        )
 
         estimativas.append(
             {
                 "tabela": nome_tabela,
-                "mb_estimados": round(mb_estimados, 2),
+                "mb_estimados": mb_estimados,
             }
         )
 

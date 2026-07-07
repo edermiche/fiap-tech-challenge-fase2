@@ -20,11 +20,9 @@ variable "pipeline_jobs" {
   description = <<-EOT
     Jobs Glue do pipeline, na ordem de execução do workflow.
     Cada nome precisa ter um script correspondente em src/glue/<nome>.py.
-    Para plugar as próximas camadas, basta acrescentar à lista:
-    ["bronze_ingestao", "silver_transformacoes", "gold_analitica"]
   EOT
   type        = list(string)
-  default     = ["bronze_ingestao"]
+  default     = ["bronze_ingestao", "silver_transformacoes", "gold_analitica"]
 }
 
 variable "max_bytes_billed" {
