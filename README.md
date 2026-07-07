@@ -61,9 +61,9 @@ flowchart LR
 ### Fluxo de dados
 
 1. **Extração batch**: `src/bronze/download_bigquery.py` consulta a Base dos Dados no BigQuery (com dry run de custo antes de cada execução) e grava as 7 entidades em parquet, particionadas por `execution_date`.
-2. **Ingestão streaming**: `src/streaming/producer.py` reemite medições de alunos como eventos em micro-lotes — para a fila local (modo padrão, sem AWS) ou para o Kinesis Data Streams (`--destino kinesis`). O consumo é feito pelo `consumer.py` (local) ou pelo Lambda `consumer_lambda.py` (nuvem), que adicionam metadados de ingestão e gravam na Bronze particionado por ano.
+2. **Ingestão streaming**: `src/streaming/producer.py` reemite medições de alunos como eventos em micro-lotes — para a fila local (modo padrão, sem AWS) ou para o Kinesis Data Streams (`--destino kinesis`). O consumo é feito pelo `consumer.py` (local) ou pelo Lambda `consumer_lambda.py` (nuvem), que adicionam metadados de ingestão e gravam na Bronze em `alunos_streaming/ano=YYYY/`.
 3. **Consolidação Bronze**: `src/bronze/processar_bronze.py` unifica os arquivos brutos de cada entidade com metadados técnicos (`entidade_origem`, `modo_ingestao`, `data_ingestao_bronze`).
-4. **Transformação Silver**: `src/silver/processar_silver.py` limpa, padroniza tipos, remove duplicidades, normaliza chaves, cria flags de qualidade e modela dimensões e fatos.
+4. **Transformação Silver**: `src/silver/processar_silver.py` une os alunos ingeridos por batch e por streaming em uma única base (deduplicação pela chave natural do registro; a coluna `modo_ingestao` preserva a origem), limpa, padroniza tipos, remove duplicidades, normaliza chaves, cria flags de qualidade e modela dimensões e fatos.
 5. **Camada Gold**: `src/gold/processar_gold.py` integra resultados e metas e materializa datasets prontos para consumo analítico.
 
 `main.py` executa as três etapas acima em sequência (bronze → silver → gold) com um único comando.
@@ -79,7 +79,7 @@ A pipeline de streaming e o data lake estão **implementados e testados na AWS**
 | `src/streaming/consumer.py` | Lambda `consumer_lambda.py` com trigger no Kinesis + layer AWSSDKPandas | ✅ implantado |
 | Prints/logs de execução | CloudWatch Logs (lotes processados por invocação) | ✅ ativo |
 | `src/bronze/download_bigquery.py` | Glue Job Python Shell `bronze-ingestao` (BigQuery → S3, service account no Secrets Manager) dentro do Glue Workflow, disparado por EventBridge Scheduler | ✅ implantado |
-| `src/silver` e `src/gold` | Glue Jobs plugáveis no mesmo workflow (encadeamento condicional já provisionado; `pipeline_jobs` hoje só lista `bronze_ingestao`) | 🔜 transformações prontas localmente, ainda não plugadas no workflow |
+| `src/silver` e `src/gold` | Glue Jobs `silver-transformacoes` e `gold-analitica` no mesmo workflow (encadeamento condicional bronze → silver → gold, reaproveitando os módulos locais via pacote `src/` no S3) | ✅ implantado |
 | — | Alertas de falha de job: EventBridge rule → SNS (e-mail) | ✅ implantado |
 
 O desenho local e o da nuvem são deliberadamente espelhados: o handler do Lambda (`src/streaming/consumer_lambda.py`) reimplementa o mesmo fluxo do consumer local, e o producer alterna entre os destinos com uma flag (`--destino kinesis` usa `put_records` via boto3). Isso permite que qualquer avaliador execute a simulação completa sem conta AWS, e que a versão em nuvem seja reproduzida com um comando via Terraform (`infra/` — ver [infra/README.md](infra/README.md)), incluindo o import dos recursos pré-existentes para o state.
@@ -115,7 +115,7 @@ Tabelas sem uma coluna de ano — dimensões e domínios (`dim_uf`, `dim_municip
 
 - 7 entidades: `alunos` (3,87 mi de linhas), `municipio`, `uf`, `meta_alfabetizacao_brasil`, `meta_alfabetizacao_uf`, `meta_alfabetizacao_municipio`, `bolsa_familia_municipio`
 - Ingestão bruta (BigQuery → parquet) particionada por `execution_date=YYYY-MM-DD`; consolidação processada em `<entidade>/processado/ano=YYYY/`, particionada por ano
-- Eventos de streaming gravados em `alunos_streaming/ano=YYYY/`
+- Eventos de streaming gravados em `alunos_streaming/ano=YYYY/` — unidos à entidade `alunos` (batch) na transformação Silver, com deduplicação pela chave natural (batch prevalece) e rastreabilidade pela coluna `modo_ingestao`
 - Metadados técnicos de rastreabilidade em todas as entidades
 
 **Volume de dados**: o projeto trabalha com todo o histórico disponível do Indicador Criança Alfabetizada (avaliação SAEB de 2023 e 2024 em todas as granularidades; Brasil e UF já têm um ciclo de acompanhamento adicional para 2025; metas projetadas até 2030). Indicador exige série histórica para comparação — descartar anos inviabilizaria a análise de evolução temporal.
@@ -129,7 +129,7 @@ Tabelas sem uma coluna de ano — dimensões e domínios (`dim_uf`, `dim_municip
 - **Fatos de metas** (colunas → linhas): `fato_meta_anual_brasil`, `fato_meta_anual_uf`, `fato_meta_anual_municipio`
 - **Distribuição por nível**: `fato_distribuicao_nivel_uf`, `fato_distribuicao_nivel_municipio`
 - **Granularidade aluno**: `fato_aluno_alfabetizacao` (3,87 mi de linhas com flags de qualidade)
-- **Enriquecimento externo**: `fato_bolsa_familia_municipio` (total de beneficiários e valor pago por município/ano, ainda não consumida na Gold)
+- **Enriquecimento externo**: `fato_bolsa_familia_municipio` (total de beneficiários e valor pago por município/ano, consumida na Gold em `meta_uf_bolsa_familia` e `indicador_alfabetizacao_municipio`)
 
 Transformações aplicadas: padronização de textos e códigos identificadores, conversão de tipos, remoção de duplicidades exatas, normalização de chaves, unpivot de metas anuais e níveis de proficiência, flags de validação (percentuais em [0,100], chaves preenchidas, valores não negativos) — registros inválidos são sinalizados, não descartados, preservando rastreabilidade.
 

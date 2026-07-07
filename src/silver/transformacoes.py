@@ -1,8 +1,12 @@
+# As anotações `X | None` precisam ser adiadas: o Glue Python Shell roda 3.9.
+from __future__ import annotations
+
 from datetime import date
 
 import pandas as pd
 
 from src.silver.config import (
+    CHAVE_NATURAL_ALUNOS,
     COLUNAS_METAS,
     COLUNAS_NIVEIS,
     COLUNAS_NUMERICAS_META,
@@ -141,6 +145,40 @@ def padronizar_alunos(df: pd.DataFrame) -> pd.DataFrame:
     df_base = converter_colunas_numericas(df_base, ["proficiencia", "peso_aluno"])
 
     return df_base.drop_duplicates().reset_index(drop=True)
+
+
+def combinar_alunos_batch_streaming(
+    df_alunos_batch: pd.DataFrame,
+    df_alunos_streaming: pd.DataFrame | None,
+) -> pd.DataFrame:
+    """
+    Une os alunos ingeridos por batch e por streaming em uma única base.
+
+    Os eventos de streaming carregam o mesmo dado de alunos do batch
+    (o producer reemite os registros da avaliação), então entram na mesma
+    base padronizada. Quando o mesmo registro chega pelos dois modos, o
+    batch prevalece (keep="first"); a coluna modo_ingestao preserva a
+    origem de cada registro que sobrevive à deduplicação.
+    """
+    df_batch = padronizar_alunos(df_alunos_batch)
+
+    if df_alunos_streaming is None or df_alunos_streaming.empty:
+        return df_batch
+
+    df_streaming = padronizar_alunos(df_alunos_streaming)
+    df = pd.concat([df_batch, df_streaming], ignore_index=True)
+
+    chave_natural = [
+        coluna
+        for coluna in CHAVE_NATURAL_ALUNOS
+        if coluna in df.columns
+    ]
+
+    print(
+        f"Alunos híbrido: {len(df_batch)} batch + {len(df_streaming)} streaming"
+    )
+
+    return df.drop_duplicates(subset=chave_natural, keep="first").reset_index(drop=True)
 
 
 def padronizar_bolsa_familia_municipio(df: pd.DataFrame) -> pd.DataFrame:
@@ -418,21 +456,23 @@ def criar_fato_aluno_alfabetizacao(
     df_alunos_base: pd.DataFrame,
     data_processamento: date,
 ) -> pd.DataFrame:
+    colunas = [
+        "ano",
+        "id_aluno",
+        "id_escola",
+        "id_municipio",
+        "serie",
+        "rede",
+        "caderno",
+        "presenca",
+        "preenchimento_caderno",
+        "alfabetizado",
+        "proficiencia",
+        "peso_aluno",
+        "modo_ingestao",
+    ]
     df = df_alunos_base[
-        [
-            "ano",
-            "id_aluno",
-            "id_escola",
-            "id_municipio",
-            "serie",
-            "rede",
-            "caderno",
-            "presenca",
-            "preenchimento_caderno",
-            "alfabetizado",
-            "proficiencia",
-            "peso_aluno",
-        ]
+        [coluna for coluna in colunas if coluna in df_alunos_base.columns]
     ].copy()
 
     df["flag_id_aluno_valido"] = df["id_aluno"].notna() & (df["id_aluno"] != "")
@@ -491,7 +531,10 @@ def transformar_bronze_para_silver(
     df_meta_municipio_base = padronizar_meta_municipio(
         dados_bronze["meta_alfabetizacao_municipio"]
     )
-    df_alunos_base = padronizar_alunos(dados_bronze["alunos"])
+    df_alunos_base = combinar_alunos_batch_streaming(
+        dados_bronze["alunos"],
+        dados_bronze.get("alunos_streaming"),
+    )
     df_bolsa_familia_base = padronizar_bolsa_familia_municipio(
         dados_bronze["bolsa_familia_municipio"]
     )

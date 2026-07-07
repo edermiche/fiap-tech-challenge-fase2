@@ -24,6 +24,7 @@ TIPOS_BASE = {
     "sigla_uf": "string",
     "rede": "string",
     "serie": "string",
+    "modo_ingestao": "string",
     "data_processamento_silver": "string",
 }
 

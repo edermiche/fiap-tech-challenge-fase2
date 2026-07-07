@@ -11,9 +11,9 @@ def adicionar_metadados_bronze(df: pd.DataFrame, entidade: str) -> pd.DataFrame:
     """
     Adiciona metadados técnicos de ingestão na camada bronze.
 
-    Neste momento o fluxo está simulando uma ingestão batch.
-    No futuro, a coluna modo_ingestao poderá receber outros valores,
-    como streaming.
+    Este fluxo cobre a ingestão batch; a ingestão via streaming grava
+    modo_ingestao="streaming" no consumer (local ou Lambda), e as duas
+    origens são unidas na transformação silver.
     """
     df = df.copy()
 

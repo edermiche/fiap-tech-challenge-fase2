@@ -15,6 +15,24 @@ ENTIDADES_BRONZE_SILVER = [
     "bolsa_familia_municipio",
 ]
 
+# Entidade bronze alimentada pelo fluxo de streaming (consumer local ou
+# Lambda). Opcional: quando existe, é unida à entidade "alunos" do batch
+# antes das transformações silver.
+ENTIDADE_ALUNOS_STREAMING = "alunos_streaming"
+
+# Chave natural de um registro de avaliação de aluno, usada para
+# deduplicar a união batch + streaming (os eventos reemitem os mesmos
+# registros da avaliação).
+CHAVE_NATURAL_ALUNOS = [
+    "ano",
+    "id_municipio",
+    "id_escola",
+    "id_aluno",
+    "serie",
+    "rede",
+    "caderno",
+]
+
 
 COLUNAS_NIVEIS = [
     "proporcao_aluno_nivel_0",

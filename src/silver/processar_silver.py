@@ -5,9 +5,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.silver.config import BRONZE_PATH, ENTIDADES_BRONZE_SILVER
+from src.silver.config import (
+    BRONZE_PATH,
+    ENTIDADE_ALUNOS_STREAMING,
+    ENTIDADES_BRONZE_SILVER,
+)
 from src.silver.gravadores import salvar_entidade_silver
-from src.silver.leitores import ler_entidade_bronze
+from src.silver.leitores import ler_alunos_streaming, ler_entidade_bronze
 from src.silver.qualidade import aplicar_qualidade_silver
 from src.silver.transformacoes import transformar_bronze_para_silver
 
@@ -17,6 +21,11 @@ def carregar_dados_bronze() -> dict[str, pd.DataFrame]:
 
     for entidade in ENTIDADES_BRONZE_SILVER:
         dados_bronze[entidade] = ler_entidade_bronze(BRONZE_PATH / entidade)
+
+    df_alunos_streaming = ler_alunos_streaming(BRONZE_PATH / ENTIDADE_ALUNOS_STREAMING)
+
+    if df_alunos_streaming is not None:
+        dados_bronze[ENTIDADE_ALUNOS_STREAMING] = df_alunos_streaming
 
     return dados_bronze
 

@@ -1,10 +1,10 @@
 <mxfile host="Electron">
   <diagram name="Arquitetura Pipeline Híbrido" id="arquitetura-fiap-fase2">
-    <mxGraphModel dx="1047" dy="623" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="750" math="0" shadow="0">
+    <mxGraphModel dx="1645" dy="971" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="750" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="bigquery" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Base dos Dados&#xa;(BigQuery)&#xa;6 tabelas INEP" vertex="1">
+        <mxCell id="bigquery" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=12;" value="Base dos Dados&#xa;(BigQuery)&#xa;7 tabelas (INEP + Bolsa Família)" vertex="1">
           <mxGeometry height="90" width="150" y="270" as="geometry" />
         </mxCell>
         <mxCell id="container_local" parent="1" style="rounded=1;whiteSpace=wrap;html=1;verticalAlign=top;fontStyle=1;fontSize=13;fillColor=#f5f5f5;strokeColor=#666666;dashed=0;" value="Máquina local (simulação completa sem AWS)" vertex="1">
@@ -13,10 +13,10 @@
         <mxCell id="download" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="download_bigquery.py&#xa;(dry run de custo + extração)" vertex="1">
           <mxGeometry height="55" width="180" x="260" y="110" as="geometry" />
         </mxCell>
-        <mxCell id="mainpy" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="main.py&#xa;(consolidação Bronze)" vertex="1">
+        <mxCell id="mainpy" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="main.py&#xa;(Bronze → Silver → Gold)" vertex="1">
           <mxGeometry height="55" width="180" x="260" y="190" as="geometry" />
         </mxCell>
-        <mxCell id="notebooks" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Notebooks&amp;nbsp;&lt;br&gt;(Silver e Gold)" vertex="1">
+        <mxCell id="notebooks" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" value="Notebooks&amp;nbsp;&lt;br&gt;(exploração e quality checks)" vertex="1">
           <mxGeometry height="55" width="180" x="260" y="300" as="geometry" />
         </mxCell>
         <mxCell id="datalocal" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=12;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" value="data/&#xa;bronze | silver | gold&#xa;(parquet particionado)" vertex="1">
@@ -154,10 +154,10 @@
         <mxCell id="s3bronze" parent="-91KoKWC6isEvioIx8ns-5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe0b2;strokeColor=#e65100;fontSize=10;" value="🥉 bronze/&#xa;brutos + alunos_streaming/&#xa;ano=YYYY/" vertex="1">
           <mxGeometry height="130" width="125" x="20" y="50" as="geometry" />
         </mxCell>
-        <mxCell id="s3silver" parent="-91KoKWC6isEvioIx8ns-5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;fontSize=10;" value="🥈 silver/&#xa;14 tabelas&#xa;dims + fatos + flags" vertex="1">
+        <mxCell id="s3silver" parent="-91KoKWC6isEvioIx8ns-5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;fontSize=10;" value="🥈 silver/&#xa;17 tabelas&#xa;dims + fatos + flags" vertex="1">
           <mxGeometry height="130" width="120" x="160" y="50" as="geometry" />
         </mxCell>
-        <mxCell id="s3gold" parent="-91KoKWC6isEvioIx8ns-5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f9a825;fontSize=10;" value="🥇 gold/&#xa;7 datasets analíticos&#xa;metas vs resultados" vertex="1">
+        <mxCell id="s3gold" parent="-91KoKWC6isEvioIx8ns-5" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f9a825;fontSize=10;" value="🥇 gold/&#xa;24 datasets analíticos&#xa;metas vs resultados" vertex="1">
           <mxGeometry height="130" width="120" x="295" y="50" as="geometry" />
         </mxCell>
         <mxCell id="3Bvzlil6QBizbS61BXoS-5" parent="-91KoKWC6isEvioIx8ns-5" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#7AA116;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3_on_outposts_storage;" value="" vertex="1">
@@ -178,10 +178,10 @@
         <mxCell id="gluebronze" parent="-91KoKWC6isEvioIx8ns-24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" value="Glue Job (Python Shell) bronze-ingestao&#xa;BigQuery → bronze/&#xa;(dry run + trava de custo)" vertex="1">
           <mxGeometry height="60" width="290" x="20" y="50" as="geometry" />
         </mxCell>
-        <mxCell id="gluesilver" parent="-91KoKWC6isEvioIx8ns-24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;fontSize=10;dashed=1;" value="Glue Job silver-transformacoes&#xa;(plugável — em construção local)" vertex="1">
+        <mxCell id="gluesilver" parent="-91KoKWC6isEvioIx8ns-24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eceff1;strokeColor=#607d8b;fontSize=10;" value="Glue Job (Python Shell) silver-transformacoes&#xa;bronze (batch + alunos_streaming) → silver/&#xa;(união híbrida com dedupe por chave natural)" vertex="1">
           <mxGeometry height="45" width="290" x="20" y="150" as="geometry" />
         </mxCell>
-        <mxCell id="gluegold" parent="-91KoKWC6isEvioIx8ns-24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f9a825;fontSize=10;dashed=1;" value="Glue Job gold-analitica&#xa;(plugável — em construção local)" vertex="1">
+        <mxCell id="gluegold" parent="-91KoKWC6isEvioIx8ns-24" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff9c4;strokeColor=#f9a825;fontSize=10;" value="Glue Job (Python Shell) gold-analitica&#xa;silver → gold/ (datasets analíticos)" vertex="1">
           <mxGeometry height="45" width="290" x="20" y="220" as="geometry" />
         </mxCell>
         <mxCell id="et1" edge="1" parent="-91KoKWC6isEvioIx8ns-24" source="gluebronze" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" target="gluesilver" value="SUCCEEDED">
@@ -214,21 +214,6 @@
             <mxPoint x="1380" y="220" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="-91KoKWC6isEvioIx8ns-7" parent="1" style="verticalLabelPosition=bottom;aspect=fixed;html=1;shape=mxgraph.salesforce.marketing;fillColor=none;strokeColor=none;" value="" vertex="1">
-          <mxGeometry height="56.25" width="56.25" x="60" y="560.64" as="geometry" />
-        </mxCell>
-        <mxCell id="-91KoKWC6isEvioIx8ns-10" parent="1" style="verticalLabelPosition=bottom;aspect=fixed;html=1;shape=mxgraph.salesforce.marketing;fillColor=none;strokeColor=none;" value="" vertex="1">
-          <mxGeometry height="60" width="60" x="30" y="585" as="geometry" />
-        </mxCell>
-        <mxCell id="-91KoKWC6isEvioIx8ns-9" parent="1" style="verticalLabelPosition=bottom;aspect=fixed;html=1;shape=mxgraph.salesforce.marketing;fillColor=none;strokeColor=none;" value="" vertex="1">
-          <mxGeometry height="60" width="60" x="80" y="560.64" as="geometry" />
-        </mxCell>
-        <mxCell id="-91KoKWC6isEvioIx8ns-8" parent="1" style="verticalLabelPosition=bottom;aspect=fixed;html=1;shape=mxgraph.salesforce.marketing;fillColor=none;strokeColor=none;" value="" vertex="1">
-          <mxGeometry height="60" width="60" x="70" y="592.5" as="geometry" />
-        </mxCell>
-        <mxCell id="-91KoKWC6isEvioIx8ns-11" parent="1" style="verticalLabelPosition=bottom;aspect=fixed;html=1;shape=mxgraph.salesforce.marketing;fillColor=none;strokeColor=none;" value="" vertex="1">
-          <mxGeometry height="60" width="60" x="103.13" y="585" as="geometry" />
-        </mxCell>
         <mxCell id="-91KoKWC6isEvioIx8ns-17" connectable="0" parent="1" style="group" value="" vertex="1">
           <mxGeometry height="83" width="155" x="1405" y="82" as="geometry" />
         </mxCell>
@@ -246,6 +231,23 @@
         </mxCell>
         <mxCell id="-91KoKWC6isEvioIx8ns-15" parent="-91KoKWC6isEvioIx8ns-18" style="sketch=0;points=[[0,0,0],[0.25,0,0],[0.5,0,0],[0.75,0,0],[1,0,0],[0,1,0],[0.25,1,0],[0.5,1,0],[0.75,1,0],[1,1,0],[0,0.25,0],[0,0.5,0],[0,0.75,0],[1,0.25,0],[1,0.5,0],[1,0.75,0]];outlineConnect=0;fontColor=#232F3E;fillColor=#E7157B;strokeColor=#ffffff;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eventbridge;" value="" vertex="1">
           <mxGeometry height="28" width="28" x="2" as="geometry" />
+        </mxCell>
+        <mxCell id="e20" edge="1" parent="1" source="s3bronze" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;fontStyle=1;exitX=0.5;exitY=1;entryX=0;entryY=0.75;" target="gluesilver" value="alunos batch + alunos_streaming&#xa;(união híbrida na silver)">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="410" />
+              <mxPoint x="1180" y="410" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e21" edge="1" parent="1" source="gluesilver" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;exitX=0;exitY=0.25;entryX=1;entryY=0.5;" target="s3silver" value="parquet&#xa;execution_date=">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" edge="1" parent="1" source="gluegold" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;exitX=0;exitY=0.5;entryX=1;entryY=0.75;" target="s3gold" value="parquet&#xa;execution_date=">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" edge="1" parent="1" source="consumerlocal" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=9;dashed=1;exitX=0.5;exitY=0;entryX=0.5;entryY=1;" target="datalocal" value="bronze alunos_streaming/&#xa;ano=YYYY">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="-91KoKWC6isEvioIx8ns-28" connectable="0" parent="1" style="group" value="" vertex="1">
           <mxGeometry height="62.5" width="180" x="1305" y="580" as="geometry" />
