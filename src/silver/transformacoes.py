@@ -48,6 +48,28 @@ def validar_percentual(df: pd.DataFrame, colunas: list[str]) -> pd.DataFrame:
 
     return df_validado
 
+def sinalizar_dado_ausente_fonte(df: pd.DataFrame, colunas: list[str]) -> pd.DataFrame:
+    """
+    Sinaliza registros cuja métrica veio nula da fonte (INEP/Saeb).
+
+    Extração Bronze é literal (queries/bronze/, SELECT sem filtro de métricas),
+    portanto o nulo é da origem. A decisão de projeto é NÃO imputar
+    valores: o registro é mantido e marcado, preservando a
+    rastreabilidade da ausência na fonte.
+    """
+    df_sinalizado = df.copy()
+
+    colunas_existentes = [c for c in colunas if c in df_sinalizado.columns]
+    if not colunas_existentes:
+        df_sinalizado["flag_dado_ausente_fonte"] = False
+        return df_sinalizado
+
+    df_sinalizado["flag_dado_ausente_fonte"] = (
+        df_sinalizado[colunas_existentes].isna().any(axis=1)
+    )
+
+    return df_sinalizado
+
 
 def converter_colunas_numericas(df: pd.DataFrame, colunas: list[str]) -> pd.DataFrame:
     df_convertido = df.copy()
@@ -257,6 +279,7 @@ def criar_fato_resultado_uf(df_uf_base: pd.DataFrame, data_processamento: date) 
         ["ano", "sigla_uf", "serie", "rede", "taxa_alfabetizacao", "media_portugues"]
     ].copy()
     df = validar_percentual(df, ["taxa_alfabetizacao"])
+    df = sinalizar_dado_ausente_fonte(df, ["taxa_alfabetizacao", "media_portugues"])
     df["data_processamento_silver"] = data_processamento.isoformat()
 
     return (
@@ -274,6 +297,7 @@ def criar_fato_resultado_municipio(
         ["ano", "id_municipio", "serie", "rede", "taxa_alfabetizacao", "media_portugues"]
     ].copy()
     df = validar_percentual(df, ["taxa_alfabetizacao"])
+    df = sinalizar_dado_ausente_fonte(df, ["taxa_alfabetizacao", "media_portugues"])
     df["data_processamento_silver"] = data_processamento.isoformat()
 
     return (
@@ -291,6 +315,7 @@ def criar_fato_resultado_brasil(
         ["ano", "rede", "taxa_alfabetizacao", "percentual_participacao"]
     ].copy()
     df = validar_percentual(df, ["taxa_alfabetizacao", "percentual_participacao"])
+    df = sinalizar_dado_ausente_fonte(df, ["taxa_alfabetizacao", "percentual_participacao"])
     df["nivel_agregacao"] = "Brasil"
     df["data_processamento_silver"] = data_processamento.isoformat()
 
@@ -305,9 +330,10 @@ def criar_fato_resultado_meta_uf(
         ["ano", "sigla_uf", "rede", "taxa_alfabetizacao", "percentual_participacao"]
     ].copy()
     df = validar_percentual(df, ["taxa_alfabetizacao", "percentual_participacao"])
+    df = sinalizar_dado_ausente_fonte(df, ["taxa_alfabetizacao", "percentual_participacao"])
     df["nivel_agregacao"] = "UF"
     df["data_processamento_silver"] = data_processamento.isoformat()
-
+    
     return (
         df.drop_duplicates()
         .sort_values(["ano", "sigla_uf", "rede"])
@@ -330,6 +356,7 @@ def criar_fato_resultado_meta_municipio(
         ]
     ].copy()
     df = validar_percentual(df, ["taxa_alfabetizacao", "percentual_participacao"])
+    df = sinalizar_dado_ausente_fonte(df, ["taxa_alfabetizacao", "percentual_participacao"])
     df["nivel_agregacao"] = "Municipio"
     df["data_processamento_silver"] = data_processamento.isoformat()
 
@@ -354,6 +381,7 @@ def criar_fato_distribuicao_nivel_uf(
         df["nivel_alfabetizacao"].str.extract(r"(\d+)").astype("Int64")
     )
     df = validar_percentual(df, ["proporcao_alunos"])
+    df = sinalizar_dado_ausente_fonte(df, ["proporcao_alunos"])
     df["data_processamento_silver"] = data_processamento.isoformat()
 
     return (
@@ -377,6 +405,7 @@ def criar_fato_distribuicao_nivel_municipio(
         df["nivel_alfabetizacao"].str.extract(r"(\d+)").astype("Int64")
     )
     df = validar_percentual(df, ["proporcao_alunos"])
+    df = sinalizar_dado_ausente_fonte(df, ["proporcao_alunos"])
     df["data_processamento_silver"] = data_processamento.isoformat()
 
     return (
