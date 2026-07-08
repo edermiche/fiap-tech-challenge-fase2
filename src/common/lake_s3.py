@@ -7,6 +7,10 @@ execution_date=<data>/[ano=<ano>/]arquivo.parquet — trocando o sistema
 de arquivos local pelo bucket do data lake. Os leitores e gravadores do
 pipeline usam este módulo quando a variável de ambiente LAKE_S3_BUCKET
 está definida.
+
+Assim como no espelho local, a coluna de ano não é gravada dentro do
+parquet quando ela também é a partição (ver particionamento.py) — evita
+coluna duplicada no Glue Catalog/Athena.
 """
 from __future__ import annotations
 
@@ -76,6 +80,9 @@ def ler_particoes(
     Lê e concatena todas as partições parquet encontradas recursivamente
     sob um prefixo (todas as partições de ano de uma execução, ou o
     arquivo único de uma tabela sem partição por ano).
+
+    Quando há partição por ano, a coluna não está no parquet (ver módulo);
+    esta função a reconstrói a partir do segmento ano=<valor> da chave.
     """
     chaves = listar_chaves_parquet(bucket, prefixo)
 
@@ -84,10 +91,29 @@ def ler_particoes(
             f"Nenhum arquivo parquet encontrado em: s3://{bucket}/{prefixo}"
         )
 
-    return pd.concat(
-        [_ler_parquet(bucket, chave, colunas) for chave in chaves],
-        ignore_index=True,
-    )
+    incluir_ano = colunas is None or "ano" in colunas
+    colunas_arquivo = [c for c in colunas if c != "ano"] if colunas else None
+
+    frames = []
+    for chave in chaves:
+        df_particao = _ler_parquet(bucket, chave, colunas_arquivo)
+        valor_ano = _extrair_particao_ano(chave)
+
+        if incluir_ano and valor_ano is not None and "ano" not in df_particao.columns:
+            df_particao.insert(0, "ano", valor_ano)
+
+        frames.append(df_particao)
+
+    return pd.concat(frames, ignore_index=True)
+
+
+def _extrair_particao_ano(chave: str) -> int | None:
+    """Extrai o valor de ano do segmento ano=<valor> de uma chave S3, se houver."""
+    for segmento in chave.split("/"):
+        if segmento.startswith("ano="):
+            return int(segmento.split("=", 1)[1])
+
+    return None
 
 
 def ler_tabela_mais_recente(
@@ -126,7 +152,11 @@ def salvar_particionado_por_ano(
         return chave
 
     for ano, df_ano in df.groupby(coluna_ano):
-        _gravar_parquet(df_ano, bucket, f"{prefixo_base}/ano={ano}/{nome_arquivo}")
+        _gravar_parquet(
+            df_ano.drop(columns="ano", errors="ignore"),
+            bucket,
+            f"{prefixo_base}/ano={ano}/{nome_arquivo}",
+        )
 
     return prefixo_base
 
