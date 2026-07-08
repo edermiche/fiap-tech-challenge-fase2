@@ -46,6 +46,12 @@ TIPOS_NUMERICOS = {
 }
 
 
+# Nota de governança: métricas de resultado (taxa_alfabetizacao,
+# media_portugues, percentual_participacao, proporcao_alunos) NÃO são
+# campos obrigatórios nas tabelas de fato. Ausências vêm da própria fonte e
+# são mantidas e sinalizadas via flag_dado_ausente_fonte (ver
+# transformacoes.sinalizar_dado_ausente_fonte), em vez de removidas ou
+# imputadas. Chaves primárias seguem obrigatórias.
 REGRAS_QUALIDADE = {
     "dominio_regiao_uf": RegraQualidade(
         chave_primaria=["sigla_uf"],
@@ -65,19 +71,19 @@ REGRAS_QUALIDADE = {
     ),
     "fato_resultado_brasil": RegraQualidade(
         chave_primaria=["ano", "rede", "nivel_agregacao"],
-        campos_obrigatorios=["ano", "rede", "taxa_alfabetizacao", "nivel_agregacao"],
+        campos_obrigatorios=["ano", "rede", "nivel_agregacao"],
     ),
     "fato_resultado_uf": RegraQualidade(
         chave_primaria=["ano", "sigla_uf", "serie", "rede"],
-        campos_obrigatorios=["ano", "sigla_uf", "serie", "rede", "taxa_alfabetizacao"],
+        campos_obrigatorios=["ano", "sigla_uf", "serie", "rede"],
     ),
     "fato_resultado_municipio": RegraQualidade(
         chave_primaria=["ano", "id_municipio", "serie", "rede"],
-        campos_obrigatorios=["ano", "id_municipio", "serie", "rede", "taxa_alfabetizacao"],
+        campos_obrigatorios=["ano", "id_municipio", "serie", "rede"],
     ),
     "fato_resultado_meta_uf": RegraQualidade(
         chave_primaria=["ano", "sigla_uf", "rede", "nivel_agregacao"],
-        campos_obrigatorios=["ano", "sigla_uf", "rede", "taxa_alfabetizacao"],
+        campos_obrigatorios=["ano", "sigla_uf", "rede"],
     ),
     "fato_resultado_meta_municipio": RegraQualidade(
         chave_primaria=["ano", "id_municipio", "rede", "nivel_alfabetizacao"],
@@ -86,7 +92,6 @@ REGRAS_QUALIDADE = {
             "id_municipio",
             "rede",
             "nivel_alfabetizacao",
-            "taxa_alfabetizacao",
         ],
     ),
     "fato_meta_anual_brasil": RegraQualidade(
@@ -109,7 +114,6 @@ REGRAS_QUALIDADE = {
             "serie",
             "rede",
             "nivel_alfabetizacao",
-            "proporcao_alunos",
         ],
     ),
     "fato_distribuicao_nivel_municipio": RegraQualidade(
@@ -120,7 +124,6 @@ REGRAS_QUALIDADE = {
             "serie",
             "rede",
             "nivel_alfabetizacao",
-            "proporcao_alunos",
         ],
     ),
     "fato_aluno_alfabetizacao": RegraQualidade(
@@ -141,6 +144,18 @@ REGRAS_QUALIDADE = {
         chave_primaria=["ano", "sigla_uf"],
         campos_obrigatorios=["ano", "sigla_uf", "total_fundeb"],
     ),
+}
+
+
+# Prefixos IBGE das UFs com ausência estrutural conhecida na fonte:
+# 14 = RR (amostra reduzida no Saeb), 53 = DF (sem malha municipal).
+PREFIXO_IBGE_UF = {
+    "11": "RO", "12": "AC", "13": "AM", "14": "RR", "15": "PA",
+    "16": "AP", "17": "TO", "21": "MA", "22": "PI", "23": "CE",
+    "24": "RN", "25": "PB", "26": "PE", "27": "AL", "28": "SE",
+    "29": "BA", "31": "MG", "32": "ES", "33": "RJ", "35": "SP",
+    "41": "PR", "42": "SC", "43": "RS", "50": "MS", "51": "MT",
+    "52": "GO", "53": "DF",
 }
 
 
@@ -256,4 +271,53 @@ def aplicar_qualidade_silver(
     return {
         nome_tabela: aplicar_qualidade_tabela(nome_tabela, df)
         for nome_tabela, df in tabelas_silver.items()
+    }
+
+
+def relatorio_ausencia_fonte(tabelas_silver: dict[str, pd.DataFrame]) -> None:
+    """
+    Audita os registros mantidos com métrica ausente na fonte.
+
+    Complementa o print [QUALIDADE]: enquanto aquele mostra o que foi
+    removido (chaves inválidas/duplicatas), este mostra o que foi mantido
+    e sinalizado via flag_dado_ausente_fonte, com a distribuição por
+    UF/ano — evidência das ausências estruturais (ex.: RR e DF).
+    """
+    for nome_tabela, df in tabelas_silver.items():
+        if "flag_dado_ausente_fonte" not in df.columns:
+            continue
+
+        marcados = df[df["flag_dado_ausente_fonte"].fillna(False)]
+        total = len(marcados)
+        if total == 0:
+            continue
+
+        percentual = 100 * total / len(df) if len(df) else 0
+        print(
+            f"[AUSENCIA FONTE] silver.{nome_tabela}: "
+            f"{total} registros sinalizados ({percentual:.1f}% da tabela)"
+        )
+
+        if "sigla_uf" in marcados.columns:
+            detalhe = marcados.groupby(["sigla_uf", "ano"]).size()
+            print(detalhe.to_string())
+        elif "id_municipio" in marcados.columns:
+            uf_derivada = (
+                marcados["id_municipio"].astype(str).str[:2].map(PREFIXO_IBGE_UF)
+            )
+            detalhe = marcados.groupby([uf_derivada.rename("uf"), "ano"]).size()
+            print(detalhe.to_string())
+
+
+def relatorio_ausencia_fonte_silver(
+    tabelas_silver: dict[str, pd.DataFrame],
+) -> dict[str, int]:
+    """
+    Versão programática do relatório, útil para testes e monitoramento:
+    retorna o total de registros sinalizados por tabela.
+    """
+    return {
+        nome_tabela: int(df["flag_dado_ausente_fonte"].fillna(False).sum())
+        for nome_tabela, df in tabelas_silver.items()
+        if "flag_dado_ausente_fonte" in df.columns
     }
