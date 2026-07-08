@@ -8,6 +8,12 @@ seletiva por ano, reduzindo bytes lidos em motores que fazem partition
 pruning (Athena/BigQuery) — ver seção de FinOps do README. Tabelas sem
 coluna de ano (dimensões/domínios) são salvas em arquivo único, sem
 partição adicional.
+
+A coluna usada para particionar por ano não é gravada dentro do parquet:
+o valor já está no nome da pasta (ano=<valor>), e mantê-la também como
+coluna faz o Glue Crawler catalogar "ano" duas vezes (partição + coluna),
+o que o Athena rejeita com "duplicate columns". `ler_particoes` reconstrói
+essa coluna a partir do nome da pasta ao ler.
 """
 # As anotações `X | None` precisam ser adiadas: o Glue Python Shell roda 3.9.
 from __future__ import annotations
@@ -51,7 +57,9 @@ def salvar_particionado_por_ano(
     for ano, df_ano in df.groupby(coluna_ano):
         pasta_ano = caminho_base / f"ano={ano}"
         pasta_ano.mkdir(parents=True, exist_ok=True)
-        df_ano.to_parquet(pasta_ano / nome_arquivo, index=False)
+        df_ano.drop(columns="ano", errors="ignore").to_parquet(
+            pasta_ano / nome_arquivo, index=False
+        )
 
     return caminho_base
 
@@ -82,17 +90,31 @@ def ler_particoes(
     Lê e concatena todas as partições parquet encontradas recursivamente
     em caminho_base (todas as partições de ano de uma execução, ou o
     arquivo único de uma tabela sem partição por ano).
+
+    Quando há partição por ano, a coluna não está no parquet (ver módulo);
+    esta função a reconstrói a partir do nome da pasta ano=<valor>.
     """
     if not caminho_base.exists():
         raise FileNotFoundError(f"Pasta não encontrada: {caminho_base}")
 
-    arquivos_particionados = sorted(
-        arquivo
-        for pasta_ano in caminho_base.glob("ano=*")
-        if pasta_ano.is_dir()
-        for arquivo in pasta_ano.glob("*.parquet")
-    )
-    arquivos = arquivos_particionados or sorted(caminho_base.glob("*.parquet"))
+    pastas_ano = sorted(pasta for pasta in caminho_base.glob("ano=*") if pasta.is_dir())
+
+    if pastas_ano:
+        incluir_ano = colunas is None or "ano" in colunas
+        colunas_arquivo = [c for c in colunas if c != "ano"] if colunas else None
+
+        frames = []
+        for pasta_ano in pastas_ano:
+            valor_ano = int(pasta_ano.name.split("=", 1)[1])
+            for arquivo in sorted(pasta_ano.glob("*.parquet")):
+                df_particao = pd.read_parquet(arquivo, columns=colunas_arquivo)
+                if incluir_ano and "ano" not in df_particao.columns:
+                    df_particao.insert(0, "ano", valor_ano)
+                frames.append(df_particao)
+
+        return pd.concat(frames, ignore_index=True)
+
+    arquivos = sorted(caminho_base.glob("*.parquet"))
 
     if not arquivos:
         raise FileNotFoundError(f"Nenhum arquivo parquet encontrado em: {caminho_base}")
