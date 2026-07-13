@@ -4,6 +4,7 @@
 
 Pipeline de engenharia de dados em Arquitetura Medalhão (Bronze → Silver → Gold) com ingestão híbrida (batch + streaming), construído sobre dados públicos do INEP disponibilizados pela [Base dos Dados](https://basedosdados.org/), para acompanhar o **Indicador Criança Alfabetizada** no Brasil.
 
+**Repositório**: https://github.com/edermiche/fiap-tech-challenge-fase2
 ---
 
 ## 1. Contexto do Problema
@@ -347,4 +348,4 @@ O projeto segue a abordagem **CRISP-DM** (entendimento do negócio → entendime
 - [x] Plugar Silver (`src/silver`) e Gold (`src/gold`) 
 - [x] Atualização do notebook de quality checks para a estrutura atual da Silver
 - [x] Enriquecimento com fontes externas (Censo Escolar, IBGE) para os casos de uso de IA
-- [ ] Vídeo executivo (até 5 min)
+- [x] Vídeo executivo (até 5 min)
