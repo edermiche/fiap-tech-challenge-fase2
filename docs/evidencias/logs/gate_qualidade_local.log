@@ -1,0 +1,145 @@
+=============================================================================
+GATE DE QUALIDADE E HISTÓRICO gold.metricas_qualidade — execução local
+Duas execuções completas (bronze -> silver -> gold): 2026-09-01 e 2026-09-02
+=============================================================================
+
+--- 1. Saída de qualidade da execução de 2026-09-02 -------------------------
+
+[QUALIDADE] silver.dominio_regiao_uf: 27 -> 27 linhas (0 removidas)
+[QUALIDADE] silver.dim_uf: 25 -> 25 linhas (0 removidas)
+[QUALIDADE] silver.dim_municipio: 5550 -> 5550 linhas (0 removidas)
+[QUALIDADE] silver.dim_escola: 78408 -> 42811 linhas (35597 removidas)
+[QUALIDADE] silver.fato_resultado_brasil: 3 -> 3 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_uf: 145 -> 145 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_municipio: 23995 -> 23995 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_meta_uf: 81 -> 81 linhas (0 removidas)
+[QUALIDADE] silver.fato_resultado_meta_municipio: 10704 -> 10584 linhas (120 removidas)
+[QUALIDADE] silver.fato_meta_anual_brasil: 21 -> 21 linhas (0 removidas)
+[QUALIDADE] silver.fato_meta_anual_uf: 567 -> 545 linhas (22 removidas)
+[QUALIDADE] silver.fato_meta_anual_municipio: 74928 -> 74688 linhas (240 removidas)
+[QUALIDADE] silver.fato_distribuicao_nivel_uf: 1305 -> 1305 linhas (0 removidas)
+[QUALIDADE] silver.fato_distribuicao_nivel_municipio: 215955 -> 215955 linhas (0 removidas)
+[QUALIDADE] silver.fato_aluno_alfabetizacao: 3867999 -> 3867999 linhas (0 removidas)
+[QUALIDADE] silver.fato_bolsa_familia_municipio: 11140 -> 11140 linhas (0 removidas)
+[QUALIDADE] gold.metricas_qualidade atualizada (187 métricas) em: data\gold\metricas_qualidade\execution_date=2026-09-02
+[QUALIDADE] 160 métricas coletadas | ok=156 alerta=4 bloqueio=0
+[QUALIDADE][ALERTA] silver.fato_resultado_meta_municipio chave_invalida_descartada(): 1.12% (120/10704)
+[QUALIDADE][ALERTA] silver.fato_meta_anual_uf chave_invalida_descartada(): 3.88% (22/567)
+[QUALIDADE][ALERTA] silver.fato_distribuicao_nivel_uf metrica_ausente_fonte(): 48.28% (630/1305)
+[QUALIDADE][ALERTA] silver.fato_distribuicao_nivel_municipio metrica_ausente_fonte(): 48.12% (103923/215955)
+[QUALIDADE] gate aprovado: nenhuma regra bloqueante violada
+[QUALIDADE] Registrando volumetria e cobertura da Gold...
+[QUALIDADE] gold.metricas_qualidade atualizada (187 métricas) em: data\gold\metricas_qualidade\execution_date=2026-09-02
+[QUALIDADE] 27 métricas coletadas | ok=26 alerta=1 bloqueio=0
+[QUALIDADE][ALERTA] gold.indicador_meta_uf cobertura_territorial(ano=2024): 11.11% (3/27)
+[QUALIDADE] gate aprovado: nenhuma regra bloqueante violada
+
+--- 2. Partições de histórico gravadas --------------------------------------
+
+  execution_date=2026-09-01: 177 métricas
+  execution_date=2026-09-02: 187 métricas
+
+--- 3. Métricas da execução, por camada/regra/status ------------------------
+
+camada  regra                            status
+gold    cobertura_territorial            alerta     1
+                                         ok         2
+        queda_cobertura_safra_anterior   ok         3
+        tabela_gold_vazia                ok        21
+silver  aumento_ausencia_safra_anterior  ok         7
+        campo_invalido                   ok         9
+        chave_invalida_descartada        alerta     2
+                                         ok        14
+        chave_primaria_duplicada         ok        16
+        duplicidade_removida             ok        16
+        metrica_ausente_fonte            alerta     2
+                                         ok         5
+        nulo_em_campo_obrigatorio        ok        60
+        percentual_fora_intervalo        ok        13
+        tabela_vazia                     ok        16
+
+--- 4. Cobertura territorial (regra cobertura_territorial) ------------------
+
+A Gold publica 24 das 27 UFs em 2024: AC e DF só têm meta a partir de 2025 na
+fonte, e RR não tem resultado publicado até 2024. É lacuna da origem, não do
+pipeline — o que a regra garante é que ela apareça, com número, a cada
+execução, em vez de sumir em silêncio.
+
+                  tabela   escopo  registros_avaliados  registros_violando  percentual_violacao status
+indicador_meta_municipio ano=2024                 5550                 318               5.7297     ok
+       indicador_meta_uf ano=2024                   27                   3              11.1111 alerta
+       indicador_meta_uf ano=2025                   27                   1               3.7037     ok
+
+--- 5. Comparação com a safra anterior --------------------------------------
+
+A execução de 2026-09-02 leu as métricas de 2026-09-01. Como as duas safras
+partem da mesma extração Bronze, o esperado é variação zero — e é isso que as
+regras comparativas registram: ausência de piora, não ausência de medição.
+
+Ausência de métrica na fonte (aumento_ausencia_safra_anterior), em pontos
+percentuais contra a safra anterior:
+
+                           tabela  percentual_violacao status
+            fato_resultado_brasil                  0.0     ok
+                fato_resultado_uf                  0.0     ok
+         fato_resultado_municipio                  0.0     ok
+           fato_resultado_meta_uf                  0.0     ok
+    fato_resultado_meta_municipio                  0.0     ok
+       fato_distribuicao_nivel_uf                  0.0     ok
+fato_distribuicao_nivel_municipio                  0.0     ok
+
+Cobertura territorial (queda_cobertura_safra_anterior) — entidades que
+existiam na safra anterior e sumiram nesta:
+
+                  tabela   escopo  registros_avaliados  registros_violando  percentual_violacao status
+indicador_meta_municipio ano=2024                 5232                   0                  0.0     ok
+       indicador_meta_uf ano=2024                   24                   0                  0.0     ok
+       indicador_meta_uf ano=2025                   26                   0                  0.0     ok
+
+--- 6. Demonstração do bloqueio ---------------------------------------------
+
+Cenário do feedback: extração em que 100% dos percentuais vêm fora de [0,100].
+A tabela silver.fato_resultado_uf real foi carregada e teve a taxa somada de
+100 antes de passar pelo gate.
+
+silver.fato_resultado_uf carregada: 145 linhas
+linhas com percentual fora de [0,100]: 145
+[QUALIDADE] gold.metricas_qualidade atualizada (38 métricas) em: data\gold\metricas_qualidade\execution_date=2026-09-02
+[QUALIDADE] 11 métricas coletadas | ok=10 alerta=0 bloqueio=1
+
+PIPELINE INTERROMPIDO:
+
+Gate de qualidade reprovado (1 violações bloqueantes). A camada não foi publicada e o pipeline foi interrompido.
+  - silver.fato_resultado_uf percentual_fora_intervalo(taxa_alfabetizacao): 100.00% (145/145 registros) > limite 5.00%
+Métricas gravadas em gold.metricas_qualidade para auditoria. Para investigar sem interromper, rode com QUALIDADE_MODO=alertar.
+
+Observações:
+- as métricas foram gravadas ANTES do bloqueio: execução reprovada também
+  deixa rastro auditável em gold.metricas_qualidade;
+- nenhuma tabela Silver foi publicada, então a Gold não foi reconstruída;
+- na AWS, essa exceção faz o job Glue falhar e dispara o alerta
+  EventBridge -> SNS -> e-mail já implantado.
+
+--- 7. Testes automatizados (pytest tests/) ---------------------------------
+
+============================= test session starts =============================
+platform win32 -- Python 3.12.2, pytest-9.0.2, pluggy-1.6.0 -- C:\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: D:\workspace\Fiap\fiap-tech-challenge-fase2
+plugins: anyio-4.10.0
+collecting ... collected 12 items
+
+tests/test_qualidade.py::test_percentual_fora_do_intervalo_barra_a_execucao PASSED [  8%]
+tests/test_qualidade.py::test_percentual_fora_do_intervalo_dentro_do_limite_nao_barra PASSED [ 16%]
+tests/test_qualidade.py::test_modo_alertar_registra_mas_nao_interrompe PASSED [ 25%]
+tests/test_qualidade.py::test_deduplicacao_de_dimensao_nao_barra PASSED  [ 33%]
+tests/test_qualidade.py::test_chave_primaria_duplicada_barra_a_execucao PASSED [ 41%]
+tests/test_qualidade.py::test_comparacao_com_safra_anterior_detecta_aumento_de_ausencia PASSED [ 50%]
+tests/test_qualidade.py::test_cobertura_territorial_registra_uf_ausente PASSED [ 58%]
+tests/test_qualidade.py::test_cobertura_dentro_do_esperado_nao_alerta PASSED [ 66%]
+tests/test_qualidade.py::test_queda_de_cobertura_entre_safras_alerta PASSED [ 75%]
+tests/test_qualidade.py::test_cobertura_estavel_entre_safras_nao_alerta PASSED [ 83%]
+tests/test_qualidade.py::test_historico_persistido_permite_ler_a_safra_anterior PASSED [ 91%]
+tests/test_qualidade.py::test_gravacao_da_gold_preserva_as_metricas_da_silver PASSED [100%]
+
+============================= 12 passed in 0.59s ==============================

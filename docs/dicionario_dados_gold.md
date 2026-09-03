@@ -6,18 +6,39 @@
 
 A camada Gold contém tabelas analíticas finais derivadas da camada Silver, criadas para responder às perguntas de negócio relacionadas à alfabetização no Brasil.
 
-**Total de tabelas Gold identificadas:** 24
+**Total de tabelas Gold identificadas:** 22 analíticas + 1 de observabilidade
+(`metricas_qualidade`).
+
+As antigas `comparacao_meta_resultado_brasil` / `_uf` / `_municipio` foram
+consolidadas nas tabelas `evolucao_meta_resultado_*` do mesmo grão, que já
+continham todas as colunas delas mais as variações anuais — ver
+[ADR-003](adr/ADR-003-governanca-camada-gold.md).
+
+## Notas de cobertura dos dados
+
+Lacunas que vêm da fonte, não do processamento. Nenhuma é erro do pipeline,
+mas todas mudam a leitura das tabelas — e por isso ficam registradas a cada
+execução em `gold.metricas_qualidade` (regra `cobertura_territorial`).
+
+| Tabela | O que esperar | Por quê |
+|---|---|---|
+| `indicador_meta_uf` e derivadas | 24 das 27 UFs em 2024; 26 em 2025 | AC e DF só têm meta a partir de 2025 na fonte, e RR não tem resultado publicado até 2024 (amostra reduzida no Saeb). O cruzamento resultado × meta é `inner join`, então a UF sem um dos lados não aparece no ano |
+| `indicador_meta_municipio` e derivadas | 5232 municípios, de 5550 na `dim_municipio` | 5352 municípios têm resultado em 2024, mas só 5232 têm meta municipal publicada; os 120 restantes ficam fora do cruzamento |
+| `evolucao_meta_resultado_municipio` | `variacao_resultado_ano_anterior` e `variacao_meta_ano_anterior` 100% nulas | O grão municipal só tem 2024: ainda não existe ano anterior para comparar. As colunas passam a ser preenchidas quando a segunda safra municipal for publicada |
+| `meta_uf_bolsa_familia` | Colunas de Bolsa Família nulas em 2025 | A fonte do Bolsa Família cobre 2023–2024. O `left join` preserva a linha da meta 2025 com o enriquecimento vazio, em vez de descartá-la |
+| `perfil_aluno_alfabetizacao` | Rede "Privada" com dezenas de alunos em 2024 | A avaliação é censitária na rede pública; a participação privada é residual e não sustenta leitura comparativa |
+
+A diferença de rótulo de rede entre grãos (`Pública` em Brasil/UF, `Municipal`
+em município) também vem da fonte e é preservada sem normalização.
 
 ## Tabelas identificadas
 
 | Tabela | Arquivo mais recente |
 |---|---|
-| `gold.comparacao_meta_resultado_brasil` | `../data/gold/comparacao_meta_resultado_brasil/execution_date=2026-07-05/` |
-| `gold.comparacao_meta_resultado_municipio` | `../data/gold/comparacao_meta_resultado_municipio/execution_date=2026-07-05/` |
-| `gold.comparacao_meta_resultado_uf` | `../data/gold/comparacao_meta_resultado_uf/execution_date=2026-07-05/` |
 | `gold.desigualdade_territorial_uf` | `../data/gold/desigualdade_territorial_uf/execution_date=2026-07-05/` |
 | `gold.distribuicao_desempenho_aluno` | `../data/gold/distribuicao_desempenho_aluno/execution_date=2026-07-05/` |
 | `gold.evolucao_alfabetizacao` | `../data/gold/evolucao_alfabetizacao/execution_date=2026-07-02/evolucao_alfabetizacao.parquet` |
+| `gold.evolucao_meta_resultado_brasil` | `../data/gold/evolucao_meta_resultado_brasil/execution_date=2026-09-02/` |
 | `gold.evolucao_meta_resultado_municipio` | `../data/gold/evolucao_meta_resultado_municipio/execution_date=2026-07-05/` |
 | `gold.evolucao_meta_resultado_uf` | `../data/gold/evolucao_meta_resultado_uf/execution_date=2026-07-05/` |
 | `gold.indicador_alfabetizacao_municipio` | `../data/gold/indicador_alfabetizacao_municipio/execution_date=2026-07-05/ano=2024/indicador_alfabetizacao_municipio.parquet` |
@@ -29,6 +50,7 @@ A camada Gold contém tabelas analíticas finais derivadas da camada Silver, cri
 | `gold.indicador_presenca_avaliacao` | `../data/gold/indicador_presenca_avaliacao/execution_date=2026-07-05/` |
 | `gold.mapa_calor_territorial` | `../data/gold/mapa_calor_territorial/execution_date=2026-07-05/` |
 | `gold.meta_uf_bolsa_familia` | `../data/gold/meta_uf_bolsa_familia/execution_date=2026-07-05/` |
+| `gold.metricas_qualidade` | `../data/gold/metricas_qualidade/execution_date=2026-09-02/metricas_qualidade.parquet` |
 | `gold.meta_uf_fundeb` | `../data/gold/meta_uf_fundeb/execution_date=2026-07-05/` |
 | `gold.perfil_aluno_alfabetizacao` | `../data/gold/perfil_aluno_alfabetizacao/execution_date=2026-07-05/` |
 | `gold.ranking_escolas_prioritarias` | `../data/gold/ranking_escolas_prioritarias/execution_date=2026-07-05/` |
@@ -39,9 +61,9 @@ A camada Gold contém tabelas analíticas finais derivadas da camada Silver, cri
 
 ---
 
-## gold.comparacao_meta_resultado_brasil
+## gold.evolucao_meta_resultado_brasil
 
-**Descricao:** Comparacao direta entre resultado observado e meta de alfabetizacao no nivel Brasil.
+**Descricao:** Serie temporal de resultado observado, meta, distancia da meta e variacao anual no nivel Brasil. Consolida a antiga `comparacao_meta_resultado_brasil` (ADR-003).
 
 **Chave sugerida:** `ano`, `ano_meta`, `rede`
 
@@ -54,48 +76,8 @@ A camada Gold contém tabelas analíticas finais derivadas da camada Silver, cri
 | `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
 | `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
 | `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
-| `flag_meta_atingida` | `bool` | Indica se a meta foi atingida. |
-| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
-| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
-
-## gold.comparacao_meta_resultado_uf
-
-**Descricao:** Comparacao direta entre resultado observado e meta de alfabetizacao por UF.
-
-**Chave sugerida:** `ano`, `ano_meta`, `sigla_uf`, `rede`
-
-| Coluna | Tipo | Descricao |
-|---|---|---|
-| `ano` | `Int64` | Ano de referencia do resultado observado. |
-| `ano_meta` | `Int64` | Ano da meta comparada. |
-| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
-| `rede` | `object` | Rede de ensino. |
-| `nivel_agregacao` | `object` | Nivel territorial da analise. |
-| `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
-| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
-| `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
-| `flag_meta_atingida` | `bool` | Indica se a meta foi atingida. |
-| `status_meta` | `object` | Classificacao textual do atingimento da meta. |
-| `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
-
-## gold.comparacao_meta_resultado_municipio
-
-**Descricao:** Comparacao direta entre resultado observado e meta de alfabetizacao por municipio.
-
-**Chave sugerida:** `ano`, `ano_meta`, `id_municipio`, `rede`
-
-| Coluna | Tipo | Descricao |
-|---|---|---|
-| `ano` | `Int64` | Ano de referencia do resultado observado. |
-| `ano_meta` | `Int64` | Ano da meta comparada. |
-| `id_municipio` | `object` | Codigo IBGE do municipio. |
-| `id_municipio_nome` | `object` | Nome do municipio. |
-| `sigla_uf` | `object` | Sigla da Unidade Federativa. |
-| `rede` | `object` | Rede de ensino. |
-| `nivel_agregacao` | `object` | Nivel territorial da analise. |
-| `resultado_alfabetizacao` | `float64` | Resultado observado de alfabetizacao. |
-| `meta_alfabetizacao` | `float64` | Meta de alfabetizacao prevista para o ano. |
-| `distancia_meta` | `float64` | Diferenca entre resultado observado e meta. |
+| `variacao_resultado_ano_anterior` | `float64` | Variacao do resultado observado em relacao ao ano anterior da mesma rede. |
+| `variacao_meta_ano_anterior` | `float64` | Variacao da meta em relacao ao ano anterior da mesma rede. |
 | `flag_meta_atingida` | `bool` | Indica se a meta foi atingida. |
 | `status_meta` | `object` | Classificacao textual do atingimento da meta. |
 | `data_processamento_gold` | `object` | Data de processamento da camada Gold. |
@@ -608,3 +590,33 @@ A camada Gold contém tabelas analíticas finais derivadas da camada Silver, cri
 | `total_registros` | `int64` | 0 | 0.0% | 3 | `1` | Quantidade de registros considerados no agrupamento. |
 | `percentual_registros` | `float64` | 0 | 0.0% | 10 | `100.0` | Percentual de registros no agrupamento. |
 | `data_processamento_gold` | `object` | 0 | 0.0% | 1 | `2026-07-02` | Data de processamento da camada Gold. |
+
+---
+
+## gold.metricas_qualidade
+
+**Descricao:** Historico das metricas de qualidade do pipeline. Uma linha por execucao, camada, tabela e regra avaliada. Gravada pela Silver (regras de conteudo) e complementada pela Gold (volumetria publicada) na mesma particao de execucao. E a tabela que permite responder se a qualidade piorou desde a safra anterior — ver [ADR-002](adr/ADR-002-gate-de-qualidade.md).
+
+**Particionamento:** `execution_date=<data>/metricas_qualidade.parquet` (sem particao por ano: e um log de execucoes, nao um fato anual).
+
+**Chave sugerida:** `data_execucao`, `camada`, `tabela`, `regra`, `coluna`, `escopo`
+
+| Coluna | Tipo | Descricao |
+|---|---|---|
+| `data_execucao` | `object` | Data da execucao do pipeline que gerou a metrica (ISO-8601). |
+| `camada` | `object` | Camada avaliada: `silver` ou `gold`. |
+| `tabela` | `object` | Tabela avaliada. |
+| `regra` | `object` | Regra aplicada (ver `src/qualidade/regras.py`). |
+| `coluna` | `object` | Coluna avaliada, quando a regra e por coluna; vazio quando e por tabela. |
+| `escopo` | `object` | Recorte adicional da avaliacao, quando existe (ex.: `ano=2024` nas regras de cobertura); vazio nas demais. |
+| `registros_avaliados` | `int64` | Total de registros considerados pela regra. |
+| `registros_violando` | `int64` | Registros que violaram a regra. |
+| `percentual_violacao` | `float64` | Percentual de violacao. Na regra `aumento_ausencia_safra_anterior`, e a variacao em pontos percentuais contra a execucao anterior. |
+| `limite_bloqueio` | `float64` | Percentual a partir do qual a regra barra a execucao; nulo nas regras de alerta. |
+| `severidade` | `object` | `bloqueante` ou `alerta`. |
+| `status` | `object` | `ok`, `alerta` ou `bloqueio`. |
+
+As regras `cobertura_territorial` (entidades ausentes contra o universo
+esperado, por ano) e `queda_cobertura_safra_anterior` (entidades que existiam
+na execucao anterior e sumiram) sao o que torna as lacunas da secao
+"Notas de cobertura dos dados" visiveis e comparaveis entre safras.

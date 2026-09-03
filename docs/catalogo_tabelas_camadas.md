@@ -59,15 +59,19 @@ A camada Silver organiza os dados em dimensoes e fatos. Nesta camada tambem sao 
 
 A camada Gold consolida os indicadores finais usados em analises e visualizacoes.
 
+Cada tabela tem um papel declarado — **base** (juncao canonica de um grao),
+**serving** (recorte pronto para uma pergunta) ou **observabilidade** (metrica
+sobre a propria pipeline). O criterio para criar uma tabela nova e o
+[ADR-003](adr/ADR-003-governanca-camada-gold.md): so entra no catalogo o que
+acrescenta coluna calculada, muda o grao ou integra outra fonte.
+
 | Tabela | Nome descritivo | Descricao |
 |---|---|---|
-| `gold.comparacao_meta_resultado_brasil` | Comparacao metas x resultados Brasil | Compara resultado observado e meta de alfabetizacao no nivel Brasil para visualizacao em grafico. |
-| `gold.comparacao_meta_resultado_municipio` | Comparacao metas x resultados municipio | Compara resultado observado e meta de alfabetizacao por municipio, com nome do municipio, UF e status. |
-| `gold.comparacao_meta_resultado_uf` | Comparacao metas x resultados UF | Compara resultado observado e meta de alfabetizacao por UF para visualizacao em grafico. |
 | `gold.desigualdade_territorial_uf` | Desigualdade territorial por UF | Mede dispersao dos resultados municipais dentro de cada UF, com amplitude, desvio padrao e percentual abaixo da meta. |
 | `gold.evolucao_alfabetizacao` | Evolucao da alfabetizacao | Serie temporal consolidada com taxa media de alfabetizacao, participacao e variacoes anuais. |
-| `gold.evolucao_meta_resultado_municipio` | Evolucao metas x resultados municipio | Serie temporal de resultado, meta, distancia da meta e variacao anual por municipio. |
-| `gold.evolucao_meta_resultado_uf` | Evolucao metas x resultados UF | Serie temporal de resultado, meta, distancia da meta e variacao anual por UF. |
+| `gold.evolucao_meta_resultado_brasil` | Evolucao metas x resultados Brasil | Serie temporal de resultado, meta, distancia da meta e variacao anual no nivel Brasil (serving; consolidou a antiga `comparacao_meta_resultado_brasil`). |
+| `gold.evolucao_meta_resultado_municipio` | Evolucao metas x resultados municipio | Serie temporal de resultado, meta, distancia da meta e variacao anual por municipio (serving; consolidou a antiga `comparacao_meta_resultado_municipio`). |
+| `gold.evolucao_meta_resultado_uf` | Evolucao metas x resultados UF | Serie temporal de resultado, meta, distancia da meta e variacao anual por UF (serving; consolidou a antiga `comparacao_meta_resultado_uf`). |
 | `gold.distribuicao_desempenho_aluno` | Distribuicao de desempenho dos alunos | Distribui alunos por faixa de proficiencia, alfabetizacao, UF, rede e serie. |
 | `gold.indicador_alfabetizacao_municipio` | Indicador de alfabetizacao por municipio | Visao municipal enriquecida com resultado, meta, status, nome do municipio, UF, Bolsa Familia e rankings de prioridade. |
 | `gold.indicador_desempenho_aluno` | Indicadores de desempenho dos alunos | Agrega proficiencia, alfabetizacao e presenca por municipio, UF, rede e serie. |
@@ -79,6 +83,7 @@ A camada Gold consolida os indicadores finais usados em analises e visualizacoes
 | `gold.mapa_calor_territorial` | Mapa de calor territorial | Classifica municipios por faixa de risco conforme distancia ate a meta. |
 | `gold.meta_uf_bolsa_familia` | Meta por UF x Bolsa Familia | Cruza meta estadual de alfabetizacao com total de beneficiarios e valor pago pelo Bolsa Familia. |
 | `gold.meta_uf_fundeb` | Meta por UF x FUNDEB | Cruza meta estadual de alfabetizacao com valor recebido do FUNDEB e ranking anual de verba. |
+| `gold.metricas_qualidade` | Metricas de qualidade por execucao | Observabilidade: historico das regras de qualidade avaliadas a cada execucao (camada, tabela, regra, violacoes, limite e status). |
 | `gold.perfil_aluno_alfabetizacao` | Perfil aluno alfabetizacao | Distribui alunos por presenca, status de alfabetizacao, serie e rede. |
 | `gold.ranking_escolas_prioritarias` | Ranking de escolas prioritarias | Ordena escolas por maior percentual de alunos nao alfabetizados. |
 | `gold.ranking_municipio_prioritario` | Ranking de municipios prioritarios | Lista municipios abaixo da meta, ordenados pela maior distancia negativa em relacao ao objetivo. |
