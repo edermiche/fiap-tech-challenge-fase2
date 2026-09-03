@@ -10,12 +10,35 @@ from pathlib import Path
 import pandas as pd
 
 from src.common.particionamento import salvar_particionado_por_ano, ler_tabela_mais_recente
+from src.qualidade.armazenamento import (
+    ler_metricas_safra_anterior,
+    salvar_metricas_qualidade,
+)
+from src.qualidade.metricas import (
+    avaliar_gates,
+    coletar_metricas_cobertura,
+    coletar_metricas_gold,
+    comparar_cobertura_com_safra_anterior,
+    imprimir_resumo,
+)
 
 
 SILVER_PATH = Path("data/silver")
 GOLD_PATH = Path("data/gold")
 
+# Partição de destino da execução corrente. É module-level porque as ~20
+# funções de materialização a usam para carimbar data_processamento_gold;
+# processar_camada_gold a redefine quando recebe uma data, para que Silver e
+# Gold caiam sempre na mesma partição (inclusive num reprocessamento de data
+# passada, ou numa execução que atravesse a meia-noite).
 EXECUTION_DATE = date.today().isoformat()
+
+# Volumetria publicada por tabela na execução corrente, alimentada por
+# salvar_gold e registrada em gold.metricas_qualidade no fim da camada.
+VOLUMETRIA_GOLD: dict[str, int] = {}
+
+# Universo territorial esperado: 26 estados + Distrito Federal.
+TOTAL_UF_BRASIL = 27
 
 
 CODIGO_UF_POR_PREFIXO = {
@@ -106,9 +129,49 @@ def salvar_gold(df: pd.DataFrame, nome_tabela: str) -> Path | str:
         destino = GOLD_PATH / nome_tabela / f"execution_date={EXECUTION_DATE}"
         salvar_particionado_por_ano(df, destino, f"{nome_tabela}.parquet")
 
+    VOLUMETRIA_GOLD[nome_tabela] = len(df)
+
     print(f"[OK] gold.{nome_tabela} salva: {len(df)} linhas")
 
     return destino
+
+
+def medir_cobertura(
+    df: pd.DataFrame,
+    coluna_entidade: str,
+    total_esperado: int,
+) -> dict[int, tuple[int, int]]:
+    """Conta entidades territoriais distintas por ano, contra o universo esperado."""
+    return {
+        int(ano): (grupo[coluna_entidade].nunique(), total_esperado)
+        for ano, grupo in df.groupby("ano")
+    }
+
+
+def registrar_qualidade_gold(
+    coberturas: dict[str, dict[int, tuple[int, int]]] | None = None,
+) -> pd.DataFrame:
+    """
+    Grava a volumetria publicada e a cobertura territorial da Gold em
+    gold.metricas_qualidade, na mesma partição de execução usada pela Silver.
+    """
+    df_metricas = coletar_metricas_gold(VOLUMETRIA_GOLD, EXECUTION_DATE)
+
+    if coberturas:
+        df_metricas = pd.concat(
+            [df_metricas, coletar_metricas_cobertura(coberturas, EXECUTION_DATE)],
+            ignore_index=True,
+        )
+        df_metricas = comparar_cobertura_com_safra_anterior(
+            df_metricas,
+            ler_metricas_safra_anterior(EXECUTION_DATE),
+        )
+
+    salvar_metricas_qualidade(df_metricas, EXECUTION_DATE)
+    imprimir_resumo(df_metricas)
+    avaliar_gates(df_metricas)
+
+    return df_metricas
 
 
 def aplicar_status_meta(df: pd.DataFrame) -> pd.DataFrame:
@@ -338,170 +401,99 @@ def processar_ranking_municipio_prioritario(
     )
 
 
-def processar_comparacao_meta_resultado_brasil(
+def processar_evolucao_meta_resultado(
+    df_indicador: pd.DataFrame,
+    grupo: list[str],
+    colunas_territorio: list[str],
+    ordenacao: list[str],
+) -> pd.DataFrame:
+    """
+    Serie temporal de meta x resultado em um grao territorial.
+
+    Tabela unica de consumo do par meta/resultado: consolida o que antes
+    eram duas tabelas Gold por grao (comparacao_* e evolucao_*), já que a
+    comparacao era a projecao desta mesma tabela sem as colunas de
+    variacao anual. Ver docs/adr/ADR-003-governanca-camada-gold.md.
+    """
+    df = df_indicador.rename(
+        columns={"taxa_alfabetizacao": "resultado_alfabetizacao"}
+    ).copy()
+    df = df.sort_values([*grupo, "ano"]).reset_index(drop=True)
+
+    df["variacao_resultado_ano_anterior"] = (
+        df.groupby(grupo)["resultado_alfabetizacao"].diff()
+    )
+    df["variacao_meta_ano_anterior"] = (
+        df.groupby(grupo)["meta_alfabetizacao"].diff()
+    )
+    df["data_processamento_gold"] = EXECUTION_DATE
+
+    colunas = [
+        "ano",
+        "ano_meta",
+        *colunas_territorio,
+        "rede",
+        "nivel_agregacao",
+        "resultado_alfabetizacao",
+        "meta_alfabetizacao",
+        "distancia_meta",
+        "variacao_resultado_ano_anterior",
+        "variacao_meta_ano_anterior",
+        "flag_meta_atingida",
+        "status_meta",
+        "data_processamento_gold",
+    ]
+
+    return (
+        df[[coluna for coluna in colunas if coluna in df.columns]]
+        .sort_values([coluna for coluna in ordenacao if coluna in df.columns])
+        .reset_index(drop=True)
+    )
+
+
+def processar_evolucao_meta_resultado_brasil(
     df_indicador_meta_brasil: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Cria tabela Gold para comparacao visual entre meta e resultado Brasil."""
-    df = df_indicador_meta_brasil.copy()
-    df = df.rename(columns={"taxa_alfabetizacao": "resultado_alfabetizacao"})
-    df["data_processamento_gold"] = EXECUTION_DATE
-
-    colunas = [
-        "ano",
-        "ano_meta",
-        "rede",
-        "nivel_agregacao",
-        "resultado_alfabetizacao",
-        "meta_alfabetizacao",
-        "distancia_meta",
-        "flag_meta_atingida",
-        "status_meta",
-        "data_processamento_gold",
-    ]
-
-    return (
-        df[[coluna for coluna in colunas if coluna in df.columns]]
-        .sort_values(["ano", "rede"])
-        .reset_index(drop=True)
-    )
-
-
-def processar_comparacao_meta_resultado_uf(
-    df_indicador_meta_uf: pd.DataFrame,
-) -> pd.DataFrame:
-    """Cria tabela Gold para comparacao visual entre meta e resultado por UF."""
-    df = df_indicador_meta_uf.copy()
-    df = df.rename(columns={"taxa_alfabetizacao": "resultado_alfabetizacao"})
-    df["data_processamento_gold"] = EXECUTION_DATE
-
-    colunas = [
-        "ano",
-        "ano_meta",
-        "sigla_uf",
-        "rede",
-        "nivel_agregacao",
-        "resultado_alfabetizacao",
-        "meta_alfabetizacao",
-        "distancia_meta",
-        "flag_meta_atingida",
-        "status_meta",
-        "data_processamento_gold",
-    ]
-
-    return (
-        df[[coluna for coluna in colunas if coluna in df.columns]]
-        .sort_values(["ano", "sigla_uf", "rede"])
-        .reset_index(drop=True)
-    )
-
-
-def processar_comparacao_meta_resultado_municipio(
-    df_indicador_meta_municipio: pd.DataFrame,
-) -> pd.DataFrame:
-    """Cria tabela Gold para comparacao visual entre meta e resultado por municipio."""
-    df = df_indicador_meta_municipio.copy()
-    df = df.rename(columns={"taxa_alfabetizacao": "resultado_alfabetizacao"})
-    df["sigla_uf"] = df["id_municipio"].astype(str).str[:2].map(CODIGO_UF_POR_PREFIXO)
-    df["data_processamento_gold"] = EXECUTION_DATE
-
-    colunas = [
-        "ano",
-        "ano_meta",
-        "id_municipio",
-        "id_municipio_nome",
-        "sigla_uf",
-        "rede",
-        "nivel_agregacao",
-        "resultado_alfabetizacao",
-        "meta_alfabetizacao",
-        "distancia_meta",
-        "flag_meta_atingida",
-        "status_meta",
-        "data_processamento_gold",
-    ]
-
-    return (
-        df[[coluna for coluna in colunas if coluna in df.columns]]
-        .sort_values(["ano", "sigla_uf", "id_municipio_nome", "id_municipio", "rede"])
-        .reset_index(drop=True)
+    """Serie temporal de meta e resultado no nivel Brasil."""
+    return processar_evolucao_meta_resultado(
+        df_indicador_meta_brasil,
+        grupo=["rede"],
+        colunas_territorio=[],
+        ordenacao=["rede", "ano"],
     )
 
 
 def processar_evolucao_meta_resultado_uf(
-    df_comparacao_meta_resultado_uf: pd.DataFrame,
+    df_indicador_meta_uf: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Cria serie temporal de meta e resultado por UF."""
-    df = df_comparacao_meta_resultado_uf.copy()
-    df = df.sort_values(["sigla_uf", "rede", "ano"]).reset_index(drop=True)
-    grupo = ["sigla_uf", "rede"]
-    df["variacao_resultado_ano_anterior"] = (
-        df.groupby(grupo)["resultado_alfabetizacao"].diff()
-    )
-    df["variacao_meta_ano_anterior"] = (
-        df.groupby(grupo)["meta_alfabetizacao"].diff()
-    )
-    df["data_processamento_gold"] = EXECUTION_DATE
-
-    colunas = [
-        "ano",
-        "ano_meta",
-        "sigla_uf",
-        "rede",
-        "nivel_agregacao",
-        "resultado_alfabetizacao",
-        "meta_alfabetizacao",
-        "distancia_meta",
-        "variacao_resultado_ano_anterior",
-        "variacao_meta_ano_anterior",
-        "flag_meta_atingida",
-        "status_meta",
-        "data_processamento_gold",
-    ]
-
-    return (
-        df[[coluna for coluna in colunas if coluna in df.columns]]
-        .sort_values(["sigla_uf", "rede", "ano"])
-        .reset_index(drop=True)
+    """Serie temporal de meta e resultado por UF."""
+    return processar_evolucao_meta_resultado(
+        df_indicador_meta_uf,
+        grupo=["sigla_uf", "rede"],
+        colunas_territorio=["sigla_uf"],
+        ordenacao=["sigla_uf", "rede", "ano"],
     )
 
 
 def processar_evolucao_meta_resultado_municipio(
-    df_comparacao_meta_resultado_municipio: pd.DataFrame,
+    df_indicador_meta_municipio: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Cria serie temporal de meta e resultado por municipio."""
-    df = df_comparacao_meta_resultado_municipio.copy()
-    df = df.sort_values(["id_municipio", "rede", "ano"]).reset_index(drop=True)
-    grupo = ["id_municipio", "rede"]
-    df["variacao_resultado_ano_anterior"] = (
-        df.groupby(grupo)["resultado_alfabetizacao"].diff()
-    )
-    df["variacao_meta_ano_anterior"] = (
-        df.groupby(grupo)["meta_alfabetizacao"].diff()
-    )
-    df["data_processamento_gold"] = EXECUTION_DATE
+    """Serie temporal de meta e resultado por municipio."""
+    df = df_indicador_meta_municipio.copy()
 
-    colunas = [
-        "ano",
-        "ano_meta",
-        "id_municipio",
-        "id_municipio_nome",
-        "sigla_uf",
-        "rede",
-        "nivel_agregacao",
-        "resultado_alfabetizacao",
-        "meta_alfabetizacao",
-        "distancia_meta",
-        "variacao_resultado_ano_anterior",
-        "variacao_meta_ano_anterior",
-        "flag_meta_atingida",
-        "status_meta",
-        "data_processamento_gold",
-    ]
+    # indicador_meta_municipio nao carrega a UF (a origem e o fato municipal):
+    # deriva do prefixo IBGE do codigo, para que o recorte por estado funcione
+    # nesta tabela de consumo.
+    if "sigla_uf" not in df.columns:
+        df["sigla_uf"] = (
+            df["id_municipio"].astype(str).str[:2].map(CODIGO_UF_POR_PREFIXO)
+        )
 
-    return (
-        df[[coluna for coluna in colunas if coluna in df.columns]]
-        .sort_values(["sigla_uf", "id_municipio_nome", "id_municipio", "rede", "ano"])
-        .reset_index(drop=True)
+    return processar_evolucao_meta_resultado(
+        df,
+        grupo=["id_municipio", "rede"],
+        colunas_territorio=["id_municipio", "id_municipio_nome", "sigla_uf"],
+        ordenacao=["sigla_uf", "id_municipio_nome", "id_municipio", "rede", "ano"],
     )
 
 
@@ -1248,10 +1240,20 @@ def processar_resumo_status_meta(
     )
 
 
-def processar_camada_gold() -> None:
+def processar_camada_gold(data_processamento: date | None = None) -> None:
     """
     Processa todas as análises da camada Gold.
+
+    `data_processamento` define a partição execution_date de destino;
+    por padrão, a data corrente.
     """
+    global EXECUTION_DATE
+
+    if data_processamento is not None:
+        EXECUTION_DATE = data_processamento.isoformat()
+
+    VOLUMETRIA_GOLD.clear()
+
     print("Iniciando processamento da camada Gold")
     print("=" * 80)
     
@@ -1311,30 +1313,22 @@ def processar_camada_gold() -> None:
     )
     salvar_gold(df_indicador_meta_brasil, "indicador_meta_brasil")
 
-    df_comparacao_meta_resultado_brasil = processar_comparacao_meta_resultado_brasil(
+    df_evolucao_meta_resultado_brasil = processar_evolucao_meta_resultado_brasil(
         df_indicador_meta_brasil,
     )
     salvar_gold(
-        df_comparacao_meta_resultado_brasil,
-        "comparacao_meta_resultado_brasil",
+        df_evolucao_meta_resultado_brasil,
+        "evolucao_meta_resultado_brasil",
     )
-    
+
     df_indicador_meta_uf = processar_indicador_meta_uf(
         df_fato_resultado_meta_uf,
         df_fato_meta_anual_uf,
     )
     salvar_gold(df_indicador_meta_uf, "indicador_meta_uf")
 
-    df_comparacao_meta_resultado_uf = processar_comparacao_meta_resultado_uf(
-        df_indicador_meta_uf,
-    )
-    salvar_gold(
-        df_comparacao_meta_resultado_uf,
-        "comparacao_meta_resultado_uf",
-    )
-
     df_evolucao_meta_resultado_uf = processar_evolucao_meta_resultado_uf(
-        df_comparacao_meta_resultado_uf,
+        df_indicador_meta_uf,
     )
     salvar_gold(
         df_evolucao_meta_resultado_uf,
@@ -1372,16 +1366,8 @@ def processar_camada_gold() -> None:
     )
     salvar_gold(df_indicador_meta_municipio, "indicador_meta_municipio")
 
-    df_comparacao_meta_resultado_municipio = processar_comparacao_meta_resultado_municipio(
-        df_indicador_meta_municipio,
-    )
-    salvar_gold(
-        df_comparacao_meta_resultado_municipio,
-        "comparacao_meta_resultado_municipio",
-    )
-
     df_evolucao_meta_resultado_municipio = processar_evolucao_meta_resultado_municipio(
-        df_comparacao_meta_resultado_municipio,
+        df_indicador_meta_municipio,
     )
     salvar_gold(
         df_evolucao_meta_resultado_municipio,
@@ -1432,6 +1418,20 @@ def processar_camada_gold() -> None:
         df_indicador_meta_municipio,
     )
     salvar_gold(df_resumo_status_meta, "resumo_status_meta")
-    
+
+    print("\n[QUALIDADE] Registrando volumetria e cobertura da Gold...")
+    registrar_qualidade_gold(
+        {
+            "indicador_meta_uf": medir_cobertura(
+                df_indicador_meta_uf, "sigla_uf", TOTAL_UF_BRASIL
+            ),
+            "indicador_meta_municipio": medir_cobertura(
+                df_indicador_meta_municipio,
+                "id_municipio",
+                df_dim_municipio["id_municipio"].nunique(),
+            ),
+        }
+    )
+
     print("\n" + "=" * 80)
     print("Processamento da camada Gold finalizado com sucesso!")

@@ -64,22 +64,30 @@ def salvar_particionado_por_ano(
     return caminho_base
 
 
-def localizar_execution_date_mais_recente(caminho_tabela: Path) -> Path:
-    """Retorna a pasta execution_date=<data> mais recente de uma tabela."""
+def listar_execution_dates(caminho_tabela: Path) -> list[Path]:
+    """Pastas execution_date=<data> de uma tabela, em ordem crescente."""
     if not caminho_tabela.exists():
         raise FileNotFoundError(f"Pasta não encontrada: {caminho_tabela}")
 
-    pastas = [
-        pasta for pasta in caminho_tabela.iterdir()
-        if pasta.is_dir() and pasta.name.startswith("execution_date=")
-    ]
+    return sorted(
+        (
+            pasta for pasta in caminho_tabela.iterdir()
+            if pasta.is_dir() and pasta.name.startswith("execution_date=")
+        ),
+        key=lambda pasta: pasta.name,
+    )
+
+
+def localizar_execution_date_mais_recente(caminho_tabela: Path) -> Path:
+    """Retorna a pasta execution_date=<data> mais recente de uma tabela."""
+    pastas = listar_execution_dates(caminho_tabela)
 
     if not pastas:
         raise FileNotFoundError(
             f"Nenhuma partição execution_date encontrada em: {caminho_tabela}"
         )
 
-    return max(pastas, key=lambda pasta: pasta.name)
+    return pastas[-1]
 
 
 def ler_particoes(
@@ -108,7 +116,8 @@ def ler_particoes(
             valor_ano = int(pasta_ano.name.split("=", 1)[1])
             for arquivo in sorted(pasta_ano.glob("*.parquet")):
                 df_particao = pd.read_parquet(arquivo, columns=colunas_arquivo)
-                if incluir_ano and "ano" not in df_particao.columns:
+                tem_coluna_ano = any(c in df_particao.columns for c in COLUNAS_ANO_CANDIDATAS)
+                if incluir_ano and not tem_coluna_ano:
                     df_particao.insert(0, "ano", valor_ano)
                 frames.append(df_particao)
 

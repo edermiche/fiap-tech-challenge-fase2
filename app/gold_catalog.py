@@ -18,25 +18,20 @@ GOLD_PATH = BASE_PATH / "data" / "gold"
 
 
 DESCRICOES_TABELAS = {
-    "comparacao_meta_resultado_brasil": {
-        "nome": "Comparacao metas x resultados Brasil",
+    "metricas_qualidade": {
+        "nome": "Metricas de qualidade por execucao",
         "descricao": (
-            "Tabela e grafico para comparar o resultado de alfabetizacao observado "
-            "com a meta no nivel Brasil."
+            "Historico das regras de qualidade avaliadas a cada execucao do "
+            "pipeline: camada, tabela, regra, registros violando, limite e "
+            "status. E a tabela que responde se a qualidade piorou desde a "
+            "safra anterior (ver docs/adr/ADR-002)."
         ),
     },
-    "comparacao_meta_resultado_municipio": {
-        "nome": "Comparacao metas x resultados municipio",
+    "evolucao_meta_resultado_brasil": {
+        "nome": "Evolucao metas x resultados Brasil",
         "descricao": (
-            "Tabela e grafico para comparar resultado observado e meta por municipio, "
-            "com filtros por ano, UF, rede, status e nome do municipio."
-        ),
-    },
-    "comparacao_meta_resultado_uf": {
-        "nome": "Comparacao metas x resultados UF",
-        "descricao": (
-            "Tabela e grafico para comparar o resultado de alfabetizacao observado "
-            "com a meta por Unidade Federativa."
+            "Tabela unica de meta x resultado no nivel Brasil: comparacao com a "
+            "meta e variacao anual na mesma serie (ver docs/adr/ADR-003)."
         ),
     },
     "evolucao_alfabetizacao": {
@@ -285,26 +280,29 @@ DESCRICOES_COLUNAS = {
     "desvio_padrao_proficiencia": "Desvio padrao da proficiencia dos alunos.",
     "percentual_alfabetizado": "Percentual de alunos alfabetizados.",
     "faixa_proficiencia": "Faixa de proficiencia do aluno.",
+    "data_execucao": "Data da execucao do pipeline que gerou a metrica.",
+    "camada": "Camada avaliada pela regra de qualidade.",
+    "tabela": "Tabela avaliada pela regra de qualidade.",
+    "regra": "Regra de qualidade aplicada.",
+    "escopo": "Recorte avaliado pela regra, quando existe (ex.: ano=2024).",
+    "registros_avaliados": "Total de registros avaliados pela regra.",
+    "registros_violando": "Registros que violaram a regra.",
+    "percentual_violacao": "Percentual de registros em violacao.",
+    "limite_bloqueio": "Percentual a partir do qual a regra barra a execucao.",
+    "severidade": "Severidade da regra: bloqueante ou alerta.",
+    "status": "Resultado da avaliacao: ok, alerta ou bloqueio.",
 }
 
 
 FILTROS_POR_TABELA = {
-    "comparacao_meta_resultado_brasil": ["ano", "ano_meta", "rede", "status_meta"],
-    "comparacao_meta_resultado_municipio": [
-        "ano",
-        "ano_meta",
-        "sigla_uf",
-        "rede",
-        "status_meta",
-        "id_municipio_nome",
-        "id_municipio",
-    ],
-    "comparacao_meta_resultado_uf": [
-        "ano",
-        "ano_meta",
-        "sigla_uf",
-        "rede",
-        "status_meta",
+    "evolucao_meta_resultado_brasil": ["ano", "ano_meta", "rede", "status_meta"],
+    "metricas_qualidade": [
+        "data_execucao",
+        "camada",
+        "tabela",
+        "regra",
+        "escopo",
+        "status",
     ],
     "evolucao_meta_resultado_municipio": [
         "ano",
@@ -442,6 +440,12 @@ FILTROS_POR_TABELA = {
 
 ROTULOS_FILTROS = {
     "ano": "Ano",
+    "data_execucao": "Execucao",
+    "camada": "Camada",
+    "tabela": "Tabela",
+    "regra": "Regra",
+    "escopo": "Escopo",
+    "status": "Status",
     "ano_meta": "Ano meta",
     "sigla_uf": "UF",
     "rede": "Rede",
@@ -528,10 +532,14 @@ COLUNAS_SEM_FILTRO_AUTOMATICO = {
 }
 
 
+# As tabelas evolucao_* consolidaram as antigas comparacao_* (ADR-003):
+# a mesma tabela alimenta o grafico de comparacao com a meta e o de serie
+# temporal, porque as colunas de variacao anual sao um acrescimo, nao uma
+# tabela nova.
 TABELAS_COM_GRAFICO_COMPARACAO = {
-    "comparacao_meta_resultado_brasil",
-    "comparacao_meta_resultado_municipio",
-    "comparacao_meta_resultado_uf",
+    "evolucao_meta_resultado_brasil",
+    "evolucao_meta_resultado_municipio",
+    "evolucao_meta_resultado_uf",
 }
 
 

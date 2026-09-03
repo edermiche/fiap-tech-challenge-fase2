@@ -225,11 +225,28 @@ def remover_nulos_criticos(df: pd.DataFrame, campos: list[str]) -> pd.DataFrame:
     return df_filtrado
 
 
-def aplicar_qualidade_tabela(nome_tabela: str, df: pd.DataFrame) -> pd.DataFrame:
+def aplicar_qualidade_tabela(
+    nome_tabela: str,
+    df: pd.DataFrame,
+) -> tuple[pd.DataFrame, tuple[int, int, int]]:
+    """
+    Aplica a limpeza da tabela e devolve, junto do DataFrame tratado, a
+    volumetria em três marcos: linhas na entrada, linhas após o descarte
+    por chave/campo obrigatório nulo e linhas após a deduplicação.
+
+    A separação é o que permite a gold.metricas_qualidade distinguir
+    perda de dado (regra bloqueante `chave_invalida_descartada`) de
+    deduplicação esperada (regra de alerta `duplicidade_removida`): uma
+    dimensão derivada de fato, como dim_escola, remove a maior parte das
+    linhas na deduplicação — é assim que ela é construída.
+    """
     df = padronizar_nomes_colunas(df)
+    total_inicial = len(df)
     regra = REGRAS_QUALIDADE.get(nome_tabela)
     if regra is None:
-        return df.drop_duplicates().reset_index(drop=True)
+        df_sem_regra = df.drop_duplicates().reset_index(drop=True)
+
+        return df_sem_regra, (total_inicial, total_inicial, len(df_sem_regra))
 
     tipos = {
         **TIPOS_BASE,
@@ -237,12 +254,12 @@ def aplicar_qualidade_tabela(nome_tabela: str, df: pd.DataFrame) -> pd.DataFrame
         **regra.tipos,
     }
 
-    total_inicial = len(df)
     df_qualificado = aplicar_tipagem(df, tipos)
     df_qualificado = remover_nulos_criticos(
         df_qualificado,
         [*regra.chave_primaria, *regra.campos_obrigatorios],
     )
+    total_apos_descarte = len(df_qualificado)
 
     chave_existente = [
         coluna
@@ -262,16 +279,27 @@ def aplicar_qualidade_tabela(nome_tabela: str, df: pd.DataFrame) -> pd.DataFrame
         f"({removidos} removidas)"
     )
 
-    return df_qualificado
+    return df_qualificado, (total_inicial, total_apos_descarte, len(df_qualificado))
 
 
 def aplicar_qualidade_silver(
     tabelas_silver: dict[str, pd.DataFrame],
-) -> dict[str, pd.DataFrame]:
-    return {
-        nome_tabela: aplicar_qualidade_tabela(nome_tabela, df)
-        for nome_tabela, df in tabelas_silver.items()
-    }
+) -> tuple[dict[str, pd.DataFrame], dict[str, tuple[int, int, int]]]:
+    """
+    Aplica a limpeza em todas as tabelas silver.
+
+    Devolve as tabelas tratadas e a volumetria por tabela, consumida por
+    src.qualidade.metricas na montagem de gold.metricas_qualidade.
+    """
+    tabelas_tratadas = {}
+    volumetria = {}
+
+    for nome_tabela, df in tabelas_silver.items():
+        tabelas_tratadas[nome_tabela], volumetria[nome_tabela] = aplicar_qualidade_tabela(
+            nome_tabela, df
+        )
+
+    return tabelas_tratadas, volumetria
 
 
 def relatorio_ausencia_fonte(tabelas_silver: dict[str, pd.DataFrame]) -> None:

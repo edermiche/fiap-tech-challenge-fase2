@@ -59,6 +59,23 @@ Para plugar um job novo: criar `src/glue/<nome>.py`, acrescentar `<nome>`
 o upload do script, o job, o gatilho condicional no workflow e o alerta
 de falha são gerados automaticamente a partir da lista.
 
+## Ciclo de vida do S3
+
+`aws_s3_bucket_lifecycle_configuration.lake` (em `s3.tf`) evita que a Bronze
+cresça indefinidamente: cada execução acrescenta uma partição
+`execution_date=<data>` e, sem política, nada expira.
+
+| Prefixo | Política |
+|---|---|
+| `bronze/` | Standard-IA aos 30 dias → Glacier Instant Retrieval aos 90 → expira aos 730 |
+| `silver/` | Standard-IA aos 90 dias, sem expiração |
+| todo o bucket | Aborta upload multipart interrompido após 7 dias |
+
+Prazos em `variables.tf` (`dias_bronze_standard_ia`, `dias_bronze_glacier_ir`,
+`dias_bronze_expiracao`, `dias_silver_standard_ia`). Racional das escolhas —
+inclusive por que Glacier **IR** e por que a Gold fica fora — em
+[docs/adr/ADR-004](../docs/adr/ADR-004-ciclo-de-vida-armazenamento.md).
+
 ## Custos
 
 | Recurso | Custo estimado |
@@ -66,7 +83,7 @@ de falha são gerados automaticamente a partir da lista.
 | Kinesis (1 shard provisionado, 24/7) | ~US$ 11/mês — **destruir fora de demos** |
 | Glue Python Shell (1 DPU) | ~US$ 0,01–0,04 por execução do pipeline |
 | Secrets Manager | US$ 0,40/mês |
-| S3 (~200 MB) + Lambda + EventBridge + SNS | centavos |
+| S3 (~200 MB) + Lambda + EventBridge + SNS | centavos (com o ciclo de vida acima, não cresce com o histórico) |
 
 O state fica local (`terraform.tfstate`, fora do git). Para desligar o
 item mais caro sem derrubar o resto:

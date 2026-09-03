@@ -40,6 +40,40 @@ Links do console para os prints (região `sa-east-1`):
 | `glue_silver_cloudwatch.log` | Job Glue `silver-transformacoes` lendo batch + streaming do S3 |
 | `glue_gold_cloudwatch.log` | Job Glue `gold-analitica` materializando os 23 datasets no S3 |
 | `glue_workflow_run.json` | Resumo da execução do workflow (status, horários e duração por job) |
+| `gate_qualidade_local.log` | Gate de qualidade e histórico `gold.metricas_qualidade`: execução aprovada, cobertura territorial, comparação com a safra anterior, demonstração do bloqueio e `pytest tests/` |
+
+## Registro do gate de qualidade — execução local (2026-09-01 e 2026-09-02)
+
+Log completo em [`logs/gate_qualidade_local.log`](logs/gate_qualidade_local.log).
+
+Duas execuções completas (bronze → silver → gold), para exercitar as regras
+comparativas com histórico real:
+
+| Execução | Métricas gravadas |
+|---|---|
+| `execution_date=2026-09-01` | 177 (153 Silver + 24 Gold) |
+| `execution_date=2026-09-02` | 187 (160 Silver + 27 Gold) |
+
+- Ambas aprovadas no gate: 5 alertas, nenhuma violação bloqueante
+- Histórico funcionando: a segunda execução leu as métricas da primeira e
+  registrou `aumento_ausencia_safra_anterior` (7 tabelas de fato) e
+  `queda_cobertura_safra_anterior` (3 recortes territoriais) — todos sem piora
+- Cobertura territorial registrada: `gold.indicador_meta_uf` publica 24 das 27
+  UFs em 2024 (AC e DF sem meta 2024 na fonte, RR sem resultado até 2024) — a
+  lacuna virou alerta com número, em vez de sumir em silêncio
+- Bloqueio demonstrado no cenário do enunciado — extração com 100% dos percentuais
+  fora de `[0,100]`:
+
+```text
+Gate de qualidade reprovado (1 violações bloqueantes). A camada não foi publicada
+e o pipeline foi interrompido.
+  - silver.fato_resultado_uf percentual_fora_intervalo(taxa_alfabetizacao):
+    100.00% (145/145 registros) > limite 5.00%
+```
+
+- `pytest tests/`: 12 testes passando (barra o percentual inválido, não barra a
+  deduplicação de dimensão, persiste e compara o histórico, mede cobertura e
+  detecta queda de cobertura entre safras)
 
 ## Registro do teste de ponta a ponta — streaming AWS (2026-07-02)
 
