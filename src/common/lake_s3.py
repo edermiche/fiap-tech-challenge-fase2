@@ -18,7 +18,7 @@ import io
 
 import pandas as pd
 
-from src.common.particionamento import resolver_coluna_ano
+from src.common.particionamento import COLUNAS_ANO_CANDIDATAS, resolver_coluna_ano
 
 _cliente_s3 = None
 
@@ -49,26 +49,31 @@ def listar_chaves_parquet(bucket: str, prefixo: str) -> list[str]:
     )
 
 
-def localizar_execution_date_mais_recente(bucket: str, prefixo_tabela: str) -> str:
-    """Retorna o prefixo execution_date=<data> mais recente de uma tabela."""
+def listar_execution_dates(bucket: str, prefixo_tabela: str) -> list[str]:
+    """Prefixos execution_date=<data> de uma tabela, em ordem crescente."""
     prefixo_tabela = prefixo_tabela.rstrip("/")
     paginador = cliente_s3().get_paginator("list_objects_v2")
 
-    particoes = [
+    return sorted(
         comum["Prefix"].rstrip("/")
         for pagina in paginador.paginate(
             Bucket=bucket, Prefix=f"{prefixo_tabela}/", Delimiter="/"
         )
         for comum in pagina.get("CommonPrefixes", [])
         if comum["Prefix"].rstrip("/").rsplit("/", 1)[-1].startswith("execution_date=")
-    ]
+    )
+
+
+def localizar_execution_date_mais_recente(bucket: str, prefixo_tabela: str) -> str:
+    """Retorna o prefixo execution_date=<data> mais recente de uma tabela."""
+    particoes = listar_execution_dates(bucket, prefixo_tabela)
 
     if not particoes:
         raise FileNotFoundError(
             f"Nenhuma partição execution_date encontrada em: s3://{bucket}/{prefixo_tabela}"
         )
 
-    return max(particoes)
+    return particoes[-1]
 
 
 def ler_particoes(
@@ -98,8 +103,9 @@ def ler_particoes(
     for chave in chaves:
         df_particao = _ler_parquet(bucket, chave, colunas_arquivo)
         valor_ano = _extrair_particao_ano(chave)
+        tem_coluna_ano = any(c in df_particao.columns for c in COLUNAS_ANO_CANDIDATAS)
 
-        if incluir_ano and valor_ano is not None and "ano" not in df_particao.columns:
+        if incluir_ano and valor_ano is not None and not tem_coluna_ano:
             df_particao.insert(0, "ano", valor_ano)
 
         frames.append(df_particao)
