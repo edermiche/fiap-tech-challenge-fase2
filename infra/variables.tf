@@ -16,6 +16,30 @@ variable "bucket_lake" {
   default     = "fiap-alfabetizacao-lake-147997124244"
 }
 
+variable "dias_bronze_standard_ia" {
+  description = "Idade (dias) em que a partição Bronze vai para Standard-IA."
+  type        = number
+  default     = 30
+}
+
+variable "dias_bronze_glacier_ir" {
+  description = "Idade (dias) em que a partição Bronze vai para Glacier Instant Retrieval."
+  type        = number
+  default     = 90
+}
+
+variable "dias_bronze_expiracao" {
+  description = "Idade (dias) em que a partição Bronze é apagada."
+  type        = number
+  default     = 730
+}
+
+variable "dias_silver_standard_ia" {
+  description = "Idade (dias) em que a partição Silver vai para Standard-IA."
+  type        = number
+  default     = 90
+}
+
 variable "pipeline_jobs" {
   description = <<-EOT
     Jobs Glue do pipeline, na ordem de execução do workflow.
